@@ -899,7 +899,7 @@ class ConnectionManager @Inject constructor(
                     button.toInt(), dx.toInt(), dy.toInt(), wheel.toInt(), hWheel.toInt()
                 )
             }
-            // 本机模式不创建虚拟鼠标（会与屏幕触摸冲突），鼠标状态不注入。
+            // 本机模式的虚拟鼠标由 GamepadInjector 创建并更新。
             ConnectionMode.LOCAL -> {}
         }
     }

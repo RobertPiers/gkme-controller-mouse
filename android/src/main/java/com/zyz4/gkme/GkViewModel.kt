@@ -92,6 +92,10 @@ class GkViewModel @Inject constructor(
     private val _physicalControllerConnected = MutableStateFlow(false)
     val physicalControllerConnected: StateFlow<Boolean> = _physicalControllerConnected.asStateFlow()
 
+    /** True when the physical controller's right stick/buttons are being used as a mouse. */
+    private val _physicalMouseMode = MutableStateFlow(false)
+    val physicalMouseMode: StateFlow<Boolean> = _physicalMouseMode.asStateFlow()
+
     private val sensorHandler = SensorHandler(app)
     private var sendJob: Job? = null
     private var sensorDisplayJob: Job? = null
@@ -119,6 +123,43 @@ class GkViewModel @Inject constructor(
 
     fun setPhysicalControllerConnected(connected: Boolean) {
         _physicalControllerConnected.value = connected
+        if (!connected) {
+            physicalMouseToggleLatched = false
+            setPhysicalMouseMode(false, announce = false)
+        }
+    }
+
+    private fun setPhysicalMouseMode(enabled: Boolean, announce: Boolean = true) {
+        if (physicalMouseModeEnabled == enabled) return
+        physicalMouseModeEnabled = enabled
+        _physicalMouseMode.value = enabled
+        physicalMouseAccumX = 0f
+        physicalMouseAccumY = 0f
+        if (!enabled) {
+            // Always release a button that may have been held while leaving mouse mode.
+            _gamepadState.value = _gamepadState.value.copy(
+                mouseButtons = 0,
+                mouseDx = 0,
+                mouseDy = 0,
+                mouseWheel = 0,
+                mousePan = 0,
+            )
+            physicalMappedMouseButtons = 0
+            if (settings.value.connectionMode == ConnectionMode.BLUETOOTH) {
+                viewModelScope.launch {
+                    connectionManager.sendMouseReport(
+                        button = 0, dx = 0, dy = 0, wheel = 0, hWheel = 0,
+                    )
+                }
+            }
+        }
+        if (announce) {
+            android.util.Log.i(
+                "GKME",
+                if (enabled) "Physical controller mouse mode enabled"
+                else "Physical controller mouse mode disabled",
+            )
+        }
     }
     private var _dpadBits = 0
     private var _physicalDpadBits = 0
@@ -149,6 +190,18 @@ class GkViewModel @Inject constructor(
     private var physicalMappedKbCodes: List<Int> = emptyList()
     /** Whether any physical input currently asks to activate the gyro. */
     private var physicalGyroActive = false
+
+    /** SELECT + START is reserved as the physical-controller mouse-mode toggle. */
+    private val physicalMouseToggleBits =
+        (GamepadState.SELECT or GamepadState.START).toUInt()
+    private var physicalMouseToggleLatched = false
+
+    /** Fractional carry keeps slow right-stick movement from being truncated at high polling rates. */
+    private var physicalMouseAccumX = 0f
+    private var physicalMouseAccumY = 0f
+
+    @Volatile
+    private var physicalMouseModeEnabled = false
 
     private val _keyboardShiftActive = MutableStateFlow(false)
     val keyboardShiftActive: StateFlow<Boolean> = _keyboardShiftActive.asStateFlow()
@@ -635,6 +688,22 @@ class GkViewModel @Inject constructor(
         touchpadClick: Boolean = false,
         touches: List<TouchPoint> = emptyList(),
     ) {
+        val toggleComboDown = (buttons and physicalMouseToggleBits) == physicalMouseToggleBits
+        if (toggleComboDown && !physicalMouseToggleLatched) {
+            physicalMouseToggleLatched = true
+            setPhysicalMouseMode(!physicalMouseModeEnabled)
+        } else if (!toggleComboDown) {
+            physicalMouseToggleLatched = false
+        }
+
+        // Do not leak the toggle combo into the game. A single button may have been observed for
+        // one input sample before the second button arrived, but the held combo itself is always
+        // consumed.
+        val mappingButtons = if (toggleComboDown) {
+            buttons and physicalMouseToggleBits.inv()
+        } else {
+            buttons
+        }
 
         val tx = (touchpadX * 1919).toInt().coerceIn(0, 1919)
         val ty = (touchpadY * 942).toInt().coerceIn(0, 942)
@@ -646,9 +715,21 @@ class GkViewModel @Inject constructor(
         val (shapedLx, shapedLy) = shapePhysicalStick(stickPreset.leftStickSettings, leftStickX, leftStickY)
         val (shapedRx, shapedRy) = shapePhysicalStick(stickPreset.rightStickSettings, rightStickX, rightStickY)
         applyPhysicalMappings(
-            buttons, leftTrigger, rightTrigger,
+            mappingButtons, leftTrigger, rightTrigger,
             shapedLx, shapedLy, shapedRx, shapedRy, touchpadTouch,
         )
+
+        if (physicalMouseModeEnabled) {
+            // In mouse mode the physical buttons are clicks rather than gamepad buttons. Explicit
+            // physical mappings still win; the defaults below make a Pro 2 useful immediately:
+            // A=LMB, B=RMB, X=MMB, LB=back, RB=forward.
+            val configured = _currentPreset.value.physicalInputMappings
+            physicalMappedMouseButtons = physicalMappedMouseButtons or
+                defaultPhysicalMouseButtons(mappingButtons, configured)
+            physicalMappedButtonBits = 0u
+            physicalLeftTriggerAnalog = 0
+            physicalRightTriggerAnalog = 0
+        }
         val mouseButtonsChanged = physicalMappedMouseButtons != previousPhysicalMouse
         val combinedMouseButtons =
             (_gamepadState.value.mouseButtons and previousPhysicalMouse.inv()) or physicalMappedMouseButtons
@@ -707,6 +788,23 @@ class GkViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun defaultPhysicalMouseButtons(
+        buttons: UInt,
+        configured: Map<String, com.zyz4.gkme.model.PhysicalInputMapping>,
+    ): Int {
+        fun pressed(key: String, gamepadBit: Int, mouseBit: Int): Int {
+            // An explicit mapping, including an intentionally empty one, overrides the default.
+            if (configured.containsKey(key)) return 0
+            return if ((buttons.toInt() and gamepadBit) != 0) mouseBit else 0
+        }
+
+        return pressed(PhysicalInputs.KEY_A, GamepadState.A, 1) or
+            pressed(PhysicalInputs.KEY_B, GamepadState.B, 2) or
+            pressed(PhysicalInputs.KEY_X, GamepadState.X, 4) or
+            pressed(PhysicalInputs.KEY_LB, GamepadState.LB, 8) or
+            pressed(PhysicalInputs.KEY_RB, GamepadState.RB, 16)
     }
 
     /** Applies the per-layout dead zone / anti dead zone / curve to a raw physical stick vector. */
@@ -901,6 +999,38 @@ class GkViewModel @Inject constructor(
         )
     }
 
+    /** Converts the physical controller's right stick into relative mouse pixels. */
+    private fun addPhysicalMouseMotion(dtSec: Float) {
+        if (!physicalMouseModeEnabled) {
+            physicalMouseAccumX = 0f
+            physicalMouseAccumY = 0f
+            return
+        }
+
+        fun shaped(value: Short): Float {
+            val normalized = value.toFloat() / 32768f
+            val magnitude = kotlin.math.abs(normalized).coerceIn(0f, 1f)
+            val curved = magnitude * magnitude
+            return if (normalized < 0f) -curved else curved
+        }
+
+        // A quadratic response gives useful fine control near center without making the edge slow.
+        val pixelsPerSecond = 1500f
+        physicalMouseAccumX += shaped(physicalRStickX) * pixelsPerSecond * dtSec
+        physicalMouseAccumY += shaped(physicalRStickY) * pixelsPerSecond * dtSec
+        val dx = physicalMouseAccumX.toInt()
+        val dy = physicalMouseAccumY.toInt()
+        physicalMouseAccumX -= dx
+        physicalMouseAccumY -= dy
+        if (dx == 0 && dy == 0) return
+
+        val state = _gamepadState.value
+        _gamepadState.value = state.copy(
+            mouseDx = (state.mouseDx.toInt() + dx).coerceIn(-32768, 32767).toShort(),
+            mouseDy = (state.mouseDy.toInt() + dy).coerceIn(-32768, 32767).toShort(),
+        )
+    }
+
     private fun startPeriodicSendLoop() {
         sendJob?.cancel()
         var lastBatteryRead = 0L
@@ -911,10 +1041,14 @@ class GkViewModel @Inject constructor(
                     readBattery()
                     lastBatteryRead = System.currentTimeMillis()
                 }
+                val intervalMs = round(1000.0 / settings.value.pollingRate).toLong().coerceAtLeast(1L)
+                addPhysicalMouseMotion(intervalMs / 1000f)
                 val combinedLx = (phoneStickX.toInt() + physicalStickX.toInt()).coerceIn(-32768, 32767).toShort()
                 val combinedLy = (phoneStickY.toInt() + physicalStickY.toInt()).coerceIn(-32768, 32767).toShort()
-                val combinedRx = (phoneRStickX.toInt() + physicalRStickX.toInt()).coerceIn(-32768, 32767).toShort()
-                val combinedRy = (phoneRStickY.toInt() + physicalRStickY.toInt()).coerceIn(-32768, 32767).toShort()
+                val combinedRx = if (physicalMouseModeEnabled) phoneRStickX
+                else (phoneRStickX.toInt() + physicalRStickX.toInt()).coerceIn(-32768, 32767).toShort()
+                val combinedRy = if (physicalMouseModeEnabled) phoneRStickY
+                else (phoneRStickY.toInt() + physicalRStickY.toInt()).coerceIn(-32768, 32767).toShort()
                 val currentState = _gamepadState.value
                 val input = currentState.copy(
                     leftStickX = combinedLx,
@@ -947,7 +1081,6 @@ class GkViewModel @Inject constructor(
                         mouseWheel = 0, mousePan = 0,
                     )
                 }
-                val intervalMs = round(1000.0 / settings.value.pollingRate).toLong().coerceAtLeast(1L)
                 nextSendTime += intervalMs
                 val waitTime = nextSendTime - System.currentTimeMillis()
                 if (waitTime > 0) {
@@ -999,6 +1132,8 @@ class GkViewModel @Inject constructor(
                     readBattery()
                     lastBatteryRead = System.currentTimeMillis()
                 }
+                val intervalMs = round(1000.0 / settings.value.pollingRate).toLong().coerceAtLeast(1L)
+                addPhysicalMouseMotion(intervalMs / 1000f)
                 val s = settings.value
                 val sensor = sensorHandler.sensorData.value
                 _gyroDisplay.value = Triple(sensor.gyroX, sensor.gyroY, sensor.gyroZ)
@@ -1209,24 +1344,26 @@ class GkViewModel @Inject constructor(
                     }
                     else -> (phoneStickY.toInt() + physicalStickY.toInt()).coerceIn(-32768, 32767).toShort()
                 }
-                val combinedRx = when (gyroMode) {
-                    GyroMode.RIGHT_STICK -> {
+                val combinedRx = when {
+                    physicalMouseModeEnabled -> phoneRStickX
+                    gyroMode == GyroMode.RIGHT_STICK -> {
                         val gyroRx = (-mappedX * sens * 32767f).toInt().coerceIn(-32768, 32767).toShort()
                         val gyroRy = (-mappedY * sens * 32767f).toInt().coerceIn(-32768, 32767).toShort()
                         (phoneRStickX.toInt() + physicalRStickX.toInt() + gyroRx.toInt()).coerceIn(-32768, 32767).toShort()
                     }
-                    GyroMode.ACCELEROMETER_RIGHT_STICK -> {
+                    gyroMode == GyroMode.ACCELEROMETER_RIGHT_STICK -> {
                         (phoneRStickX.toInt() + physicalRStickX.toInt() + accelRx.toInt()).coerceIn(-32768, 32767).toShort()
                     }
                     else -> (phoneRStickX.toInt() + physicalRStickX.toInt()).coerceIn(-32768, 32767).toShort()
                 }
-                val combinedRy = when (gyroMode) {
-                    GyroMode.RIGHT_STICK -> {
+                val combinedRy = when {
+                    physicalMouseModeEnabled -> phoneRStickY
+                    gyroMode == GyroMode.RIGHT_STICK -> {
                         val gyroRx = (-mappedX * sens * 32767f).toInt().coerceIn(-32768, 32767).toShort()
                         val gyroRy = (-mappedY * sens * 32767f).toInt().coerceIn(-32768, 32767).toShort()
                         (phoneRStickY.toInt() + physicalRStickY.toInt() + gyroRy.toInt()).coerceIn(-32768, 32767).toShort()
                     }
-                    GyroMode.ACCELEROMETER_RIGHT_STICK -> {
+                    gyroMode == GyroMode.ACCELEROMETER_RIGHT_STICK -> {
                         (phoneRStickY.toInt() + physicalRStickY.toInt() + accelRy.toInt()).coerceIn(-32768, 32767).toShort()
                     }
                     else -> (phoneRStickY.toInt() + physicalRStickY.toInt()).coerceIn(-32768, 32767).toShort()
@@ -1263,7 +1400,6 @@ class GkViewModel @Inject constructor(
                         mouseWheel = 0, mousePan = 0,
                     )
                 }
-                val intervalMs = round(1000.0 / settings.value.pollingRate).toLong().coerceAtLeast(1L)
                 nextSendTime += intervalMs
                 val waitTime = nextSendTime - System.currentTimeMillis()
                 if (waitTime > 0) {

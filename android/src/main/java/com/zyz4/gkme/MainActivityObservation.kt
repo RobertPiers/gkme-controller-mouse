@@ -92,6 +92,16 @@ internal fun MainActivity.observeState() {
                 }
             }
             launch {
+                var first = true
+                a.viewModel.physicalMouseMode.collect { mouseMode ->
+                    if (first) {
+                        first = false
+                    } else {
+                        a.showToast(if (mouseMode) "Mouse mode" else "Controller mode")
+                    }
+                }
+            }
+            launch {
                 a.viewModel.settings.collect { s ->
                     a.controlViews["touchpad"]?.visibility = View.VISIBLE
                     if (a.settingsInflated) {

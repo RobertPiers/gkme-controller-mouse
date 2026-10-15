@@ -135,8 +135,8 @@ object GamepadInjector {
      * @param rumble 是否把虚拟手柄的震动数据转发回控制端/手机。FF 能力始终暴露（系统
      *   与游戏仍视其为带震动的设备）；本机模式传 false 以忽略震动数据，避免手机马达
      *   与虚拟手柄之间形成死循环。
-     * @param mouse 是否创建虚拟鼠标。本机模式下必须为 false：虚拟鼠标会与屏幕触摸
-     *   输入冲突。
+     * @param mouse 是否创建虚拟鼠标。本机模式默认启用，便于物理手柄的鼠标模式；调用方
+     *   可以在确实需要避免触摸冲突时关闭它。
      */
     @Synchronized
     fun ensureReady(

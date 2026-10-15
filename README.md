@@ -187,3 +187,15 @@ cd GKME
 | [**qiin2333/moonlight-vplus**](https://github.com/qiin2333/moonlight-vplus) | DS 蓝牙驱动来源 |
 | [**SDL**](https://libsdl.org/) | 实体手柄输入与 HIDAPI 支持 |
 | [Dagger Hilt](https://dagger.dev/hilt/) | 依赖注入框架 |
+## Local physical-controller mouse mode
+
+This branch adds an experimental local mode for a physical controller connected
+through Android USB or Bluetooth. Hold **SELECT + START** to toggle between
+controller mode and mouse mode. In mouse mode the right stick produces relative
+mouse movement; A/B/X are left/right/middle click and LB/RB are back/forward.
+
+The local mouse is created through the existing Shizuku input service, so no
+custom kernel or PC HID driver is required. The existing gyro mouse mode can be
+used at the same time when the selected controller or Android device exposes
+gyro data. The debug APK can be built from the **Build debug APK** GitHub
+Actions workflow.
