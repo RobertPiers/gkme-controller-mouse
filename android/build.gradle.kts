@@ -41,7 +41,8 @@ android {
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
-            version = "4.4.3"
+            // 3.22.1 is the broadly available Android SDK CMake package.
+            version = "3.22.1"
         }
     }
 
