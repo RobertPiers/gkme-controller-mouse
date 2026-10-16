@@ -192,8 +192,10 @@ class GkViewModel @Inject constructor(
     private var physicalGyroActive = false
 
     /** SELECT + START is reserved as the physical-controller mouse-mode toggle. */
-    private val physicalMouseToggleBits =
-        (GamepadState.SELECT or GamepadState.START).toUInt()
+    // Keep this as an unsigned literal rather than folding Int.or(...).toUInt():
+    // the Kotlin compiler used by the Android build has an IR constant-folding
+    // bug for that expression.
+    private val physicalMouseToggleBits: UInt = 0x300u
     private var physicalMouseToggleLatched = false
 
     /** Fractional carry keeps slow right-stick movement from being truncated at high polling rates. */
