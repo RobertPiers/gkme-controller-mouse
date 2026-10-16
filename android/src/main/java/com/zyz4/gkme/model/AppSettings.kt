@@ -275,6 +275,8 @@ data class AppSettings(
     /** Index into the list of currently connected gamepads used as the input source.
      *  -1 means the physical controller input is disabled ("No controller"). */
     val inputControllerIndex: Int = 0,
+    /** Right-stick speed multiplier for the physical-controller mouse mode, in percent. */
+    val physicalMouseSensitivity: Int = 100,
     // ── Audio (DualSense Voice Coil + Speaker) ──
     val voiceCoilDevice: AudioDevice = AudioDevice.PHONE_MOTOR,
     /** Voice-coil target used while a physical controller is connected (defaults to it). */

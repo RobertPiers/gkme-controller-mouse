@@ -644,6 +644,12 @@ class GkViewModel @Inject constructor(
         connectionManager.updateSettings(settings.value.copy(controllerDriver = driver))
     }
 
+    fun updatePhysicalMouseSensitivity(sensitivity: Int) {
+        connectionManager.updateSettings(
+            settings.value.copy(physicalMouseSensitivity = sensitivity.coerceIn(25, 300))
+        )
+    }
+
     fun updateVoiceCoilDevice(device: AudioDevice) {
         val updated = if (_physicalControllerConnected.value) {
             settings.value.copy(voiceCoilDeviceConnected = device)
@@ -1033,7 +1039,8 @@ class GkViewModel @Inject constructor(
         }
 
         // A quadratic response gives useful fine control near center without making the edge slow.
-        val pixelsPerSecond = 1500f
+        val pixelsPerSecond = 1500f *
+            (settings.value.physicalMouseSensitivity.coerceIn(25, 300) / 100f)
         physicalMouseAccumX += shaped(physicalRStickX) * pixelsPerSecond * dtSec
         physicalMouseAccumY += shaped(physicalRStickY) * pixelsPerSecond * dtSec
         val dx = physicalMouseAccumX.toInt()
@@ -1831,8 +1838,8 @@ class GkViewModel @Inject constructor(
 /** Trigger value (0..255) above which a remapped LT/RT counts as pressed. */
 private const val PHYSICAL_TRIGGER_MAP_THRESHOLD = 128
 
-/** Full trigger pressure scrolls at six 120-unit wheel detents per second. */
-private const val PHYSICAL_MOUSE_SCROLL_UNITS_PER_SECOND = 720f
+/** Full trigger pressure scrolls at three 120-unit wheel detents per second. */
+private const val PHYSICAL_MOUSE_SCROLL_UNITS_PER_SECOND = 360f
 
 /** Response rate for smooth trigger pressure changes and release settling. */
 private const val PHYSICAL_MOUSE_SCROLL_RESPONSE = 24f
