@@ -6,8 +6,8 @@ import java.nio.charset.StandardCharsets
 enum class QrEcc { LOW, MEDIUM, QUARTILE, HIGH }
 
 /**
- * 极简、零依赖的 QR Code (model 2) 编码器，输出方形模块矩阵；支持 byte 模式与
- * 1..40 版本，自动选择版本与掩码。渲染由调用方负责。
+ * 极简、零依赖的 QR Code (model 2) 编码器，输出Square模块矩阵；Supported byte 模式与
+ * 1..40 版本，自动Select版本与掩码。渲染由调用方负责。
  *
  * 算法移植自 Project Nayuki 的参考实现
  * (https://www.nayuki.io/page/qr-code-generator-library，MIT License)，
@@ -26,11 +26,11 @@ class QrCode private constructor(
     private val isFunction = Array(size) { BooleanArray(size) }
 
     init {
-        require(version in MIN_VERSION..MAX_VERSION) { "版本越界" }
+        require(version in MIN_VERSION..MAX_VERSION) { "Version out of range" }
         require(dataCodewords.size == getNumDataCodewords(version, errorCorrectionLevel)) {
-            "数据长度与版本不符"
+            "Data length does not match version"
         }
-        require(requestedMask in -1..7) { "掩码越界" }
+        require(requestedMask in -1..7) { "Mask out of range" }
 
         drawFunctionPatterns()
         val allCodewords = addEccAndInterleave(dataCodewords)
@@ -184,7 +184,7 @@ class QrCode private constructor(
     // ────────────────────────── Codeword placement ──────────────────────────
 
     private fun drawCodewords(data: ByteArray) {
-        require(data.size == getNumRawDataModules() / 8) { "码字数量与版本不符" }
+        require(data.size == getNumRawDataModules() / 8) { "Codeword count does not match version" }
 
         var i = 0
         var right = size - 1
@@ -218,7 +218,7 @@ class QrCode private constructor(
                     5 -> x * y % 2 + x * y % 3 == 0
                     6 -> (x * y % 2 + x * y % 3) % 2 == 0
                     7 -> ((x + y) % 2 + x * y % 3) % 2 == 0
-                    else -> throw IllegalArgumentException("掩码越界")
+                    else -> throw IllegalArgumentException("Mask out of range")
                 }
                 if (!isFunction[y][x] && invert) modules[y][x] = !modules[y][x]
             }
@@ -411,7 +411,7 @@ class QrCode private constructor(
         private const val PENALTY_N3 = 40
         private const val PENALTY_N4 = 10
 
-        // 按索引顺序排列；索引 0 为占位，使版本号与下标对齐。
+        // 按索引顺序排列；索引 0 为占 bits，使版本号与Down标对齐。
         private val ECC_CODEWORDS_PER_BLOCK = arrayOf(
             intArrayOf(-1, 7, 10, 15, 20, 26, 18, 20, 24, 30, 18, 20, 24, 26, 30, 22, 24, 28, 30, 28, 28, 28, 28, 30, 30, 26, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30),
             intArrayOf(-1, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28),
@@ -437,7 +437,7 @@ class QrCode private constructor(
                 if (usedBits <= capacityBits) break
                 version++
             }
-            require(version <= MAX_VERSION) { "数据过长，无法生成二维码" }
+            require(version <= MAX_VERSION) { "Data too long to generate QR code" }
 
             val bb = BitBuffer()
             bb.appendBits(0x4, 4) // Byte 模式标识
@@ -472,7 +472,7 @@ class QrCode private constructor(
 
         private fun byteModeCharCountBits(version: Int): Int = if (version <= 9) 8 else 16
 
-        // ISO/IEC 18004 格式信息纠错字段：L=01, M=00, Q=11, H=10。
+        // ISO/IEC 18004 格式信息纠错字段: L=01, M=00, Q=11, H=10。
         private fun formatBits(ecl: QrEcc): Int = when (ecl) {
             QrEcc.LOW -> 1
             QrEcc.MEDIUM -> 0

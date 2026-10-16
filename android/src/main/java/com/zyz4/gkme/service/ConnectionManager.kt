@@ -48,7 +48,7 @@ private enum class ActiveProtocol { NONE, WIFI, EMOTION, USB }
 
 data class ConnectionState(
     val connected: Boolean = false,
-    val statusText: String = "未启动",
+    val statusText: String = "Not started",
     val batteryLevel: Int = 100,
     val phase: ConnectionPhase = ConnectionPhase.IDLE,
     val transportType: BluetoothTransportType? = null,
@@ -74,7 +74,7 @@ class ConnectionManager @Inject constructor(
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     /**
-     * 持久化设置是否已加载完成。在此之前 [settings] 仍是默认 [AppSettings]；任何
+     * 持久化Settings是否已加载完成。在此之前 [settings] 仍是默认 [AppSettings]；任何
      * 基于它构造的 [updateSettings] 都会把默认值写回磁盘、覆盖用户配置，因此必须
      * 丢弃（各调用方在加载完成后会重新应用，见 GkViewModel 的 settingsLoaded 等待）。
      */
@@ -94,17 +94,17 @@ class ConnectionManager @Inject constructor(
     private var reconnectJob: Job? = null
 
     /**
-     * 当前生效的传输协议。WiFi(UDP) 与 Emotion(DSU) 在设计上互斥（只有一个生效），
-     * 后连接的真实客户端会接管；@Volatile 保证跨线程可见性。
+     * 当前生效的传输协议。WiFi(UDP) 与 Emotion(DSU) 在设计Up互斥（只有一个生效），
+     * 后Connect的真实客户端会接管；@Volatile 保证跨线程可见性。
      */
     @Volatile
     private var activeProtocol = ActiveProtocol.NONE
 
-    // 持久化的鼠标按键电平状态。普通手柄状态包会以较高速率持续发送，
-    // 若其中包含 mouse_buttons=0 会把 Windows 端"按住"的按键清零，造成连点。
-    // 因此在每次发送普通状态包时注入当前真实电平。
-    // 鼠标状态更新回调 —— sendMouseReport 通过它把鼠标字段写入 ViewModel 的
-    // _gamepadState，使鼠标数据跟普通手柄数据合并到同一个 UDP 包里发送。
+    // 持久化的Mouse按键电平Status。普通ControllerStatus包会以较高速率持续发送，
+    // 若其Center包含 mouse_buttons=0 会把 Windows 端"Hold"的按键清零，造成连点。
+    // 因此在每次发送普通Status包时注入当前真实电平。
+    // MouseStatus更新回调 —— sendMouseReport 通过它把Mouse字段写入 ViewModel 的
+    // _gamepadState，使Mouse数据跟普通Controller数据合并到同一个 UDP 包里发送。
     var onMouseReport: ((button: Int, dx: Int, dy: Int, wheel: Int, hWheel: Int) -> Unit)? = null
 
     private var _lastMouseButtonsBt = 0
@@ -148,20 +148,20 @@ class ConnectionManager @Inject constructor(
     )
 
     init {
-        // 异步读取持久化设置，避免在主线程 runBlocking 读 DataStore 触发 ANR。
+        // 异步读取持久化Settings，避免在主线程 runBlocking 读 DataStore 触发 ANR。
         scope.launch {
             val loaded = try {
                 settingsRepository.settings.first()
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                // 读取失败不应卡住整个应用：退回默认值并继续，避免 settingsLoaded 永假。
+                // 读取失败不应卡住整个应用: 退回默认值并继续，避免 settingsLoaded 永假。
                 AppSettings()
             }
             _settings.value = loaded
             _settingsLoaded.value = true
-            // 先让设置收集方（MainActivity 的 collect / GkViewModel 的初始化）应用加载结果，
-            // 再执行这几个可能阻塞主线程的硬件/音频副作用，避免恢复用户设置被拖慢。
+            // 先让Settings收集方（MainActivity 的 collect / GkViewModel 的初始化）应用加载结果，
+            // 再执行这几个可能阻塞主线程的硬件/Audio副作用，避免恢复用户Settings被拖慢。
             yield()
             PhoneHdHaptics.enabled = loaded.hdVibrationEnabled
             GamepadInjector.configure(
@@ -262,7 +262,7 @@ class ConnectionManager @Inject constructor(
         }
     }
 
-    /** 服务未运行时更新状态栏文案（例如本机模式等待 Shizuku 授权 / 授权失败）。 */
+    /** 服务未运行时更新Status栏文案（例如Local模式等待 Shizuku 授权 / 授权失败）。 */
     fun setIdleStatus(text: String) {
         val st = _connectionState.value
         if (st.phase == ConnectionPhase.IDLE) {
@@ -273,7 +273,7 @@ class ConnectionManager @Inject constructor(
     fun startServer(scope: CoroutineScope) {
         val s = _settings.value
         activeProtocol = ActiveProtocol.NONE
-        _connectionState.value = _connectionState.value.copy(statusText = "启动服务...")
+        _connectionState.value = _connectionState.value.copy(statusText = "Starting service...")
         when (s.connectionMode) {
             ConnectionMode.WIFI -> {
                 serverJob = scope.launch {
@@ -293,12 +293,12 @@ class ConnectionManager @Inject constructor(
                 }
             }
             ConnectionMode.LOCAL -> {
-                // 本机模式：虚拟手柄由 GamepadInjector（Shizuku + uinput）创建，
-                // 输入直接在本机注入，不经过网络传输。
+                // Local模式: 虚拟Controller由 GamepadInjector（Shizuku + uinput）Create，
+                // 输入直接在Local注入，不经过网络传输。
                 _connectionState.value = _connectionState.value.copy(
                     connected = true,
                     phase = ConnectionPhase.CONNECTED,
-                    statusText = "本机虚拟手柄已就绪",
+                    statusText = "Local virtual controller ready",
                 )
             }
         }
@@ -342,7 +342,7 @@ class ConnectionManager @Inject constructor(
                         startAutoReconnect()
                         _connectionState.value = _connectionState.value.copy(
                             connected = false, phase = ConnectionPhase.LISTENING,
-                            statusText = "连接已断开，正在重连..."
+                            statusText = "Disconnected. Reconnecting..."
                         )
                     }
                 }
@@ -353,7 +353,7 @@ class ConnectionManager @Inject constructor(
                         activeProtocol = ActiveProtocol.NONE
                         _connectionState.value = _connectionState.value.copy(
                             connected = false, phase = ConnectionPhase.LISTENING,
-                            statusText = "连接已断开，等待重连..."
+                            statusText = "Disconnected. Waiting for reconnection..."
                         )
                     }
                 }
@@ -363,7 +363,7 @@ class ConnectionManager @Inject constructor(
                         activeProtocol = ActiveProtocol.NONE
                         _connectionState.value = _connectionState.value.copy(
                             connected = false, phase = ConnectionPhase.LISTENING,
-                            statusText = "连接已断开"
+                            statusText = "Disconnected"
                         )
                     }
                 }
@@ -379,7 +379,7 @@ class ConnectionManager @Inject constructor(
                 if (activeProtocol == ActiveProtocol.NONE) {
                     _connectionState.value = _connectionState.value.copy(
                         phase = ConnectionPhase.ERROR,
-                        statusText = "无法获取本机 IP"
+                        statusText = "Cannot get local IP address"
                     )
                 }
                 return
@@ -390,14 +390,14 @@ class ConnectionManager @Inject constructor(
             if (udpService.portInUse) {
                 _connectionState.value = _connectionState.value.copy(
                     phase = ConnectionPhase.ERROR,
-                    statusText = "端口 ${UdpService.PORT} 被占用，可能另一个实例已在运行"
+                    statusText = "Port ${UdpService.PORT} is already in use; another instance may already be running"
                 )
                 return
             }
             if (activeProtocol == ActiveProtocol.NONE) {
                 _connectionState.value = _connectionState.value.copy(
                     phase = ConnectionPhase.LISTENING,
-                    statusText = "服务已启动，等待连接..."
+                    statusText = "Service started. Waiting for connection..."
                 )
             }
         } catch (e: Exception) {
@@ -405,7 +405,7 @@ class ConnectionManager @Inject constructor(
             if (activeProtocol == ActiveProtocol.NONE) {
                 _connectionState.value = _connectionState.value.copy(
                     connected = false, phase = ConnectionPhase.ERROR,
-                    statusText = "服务异常: ${e.message}"
+                    statusText = "Service error: ${e.message}"
                 )
             }
         }
@@ -424,7 +424,7 @@ class ConnectionManager @Inject constructor(
                 onError = { msg ->
                     if (activeProtocol == ActiveProtocol.EMOTION) {
                         _connectionState.value = _connectionState.value.copy(
-                            statusText = "Emotion 错误: $msg"
+                            statusText = "Emotion error: $msg"
                         )
                     }
                 },
@@ -433,7 +433,7 @@ class ConnectionManager @Inject constructor(
                     _connectionState.value = _connectionState.value.copy(
                         connected = true,
                         phase = ConnectionPhase.CONNECTED,
-                        statusText = "已连接（Emotion兼容）"
+                        statusText = "Connected (Emotion compatible)"
                     )
                 }
             )
@@ -452,7 +452,7 @@ class ConnectionManager @Inject constructor(
                     activeProtocol = ActiveProtocol.NONE
                     _connectionState.value = _connectionState.value.copy(
                         connected = false, phase = ConnectionPhase.LISTENING,
-                        statusText = "连接已断开"
+                        statusText = "Disconnected"
                     )
                 }
             },
@@ -460,14 +460,14 @@ class ConnectionManager @Inject constructor(
         if (!ok) {
             _connectionState.value = _connectionState.value.copy(
                 connected = false, phase = ConnectionPhase.ERROR,
-                statusText = "端口 ${UsbService.PORT} 被占用，可能另一个实例已在运行"
+                statusText = "Port ${UsbService.PORT} is already in use; another instance may already be running"
             )
             return
         }
         if (activeProtocol == ActiveProtocol.NONE) {
             _connectionState.value = _connectionState.value.copy(
                 phase = ConnectionPhase.LISTENING,
-                statusText = "服务已启动，等待连接..."
+                statusText = "Service started. Waiting for connection..."
             )
         }
     }
@@ -475,7 +475,7 @@ class ConnectionManager @Inject constructor(
     private fun startBluetooth(scope: CoroutineScope, settings: AppSettings) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             _connectionState.value = _connectionState.value.copy(
-                connected = false, statusText = "蓝牙 HID 需要 Android 9+"
+                connected = false, statusText = "Bluetooth HID requires Android 9+"
             )
             return
         }
@@ -499,14 +499,14 @@ class ConnectionManager @Inject constructor(
 
     private fun updateBtState(phase: ConnectionPhase) {
         val (connected, text) = when (phase) {
-            ConnectionPhase.IDLE -> false to "未启动"
-            ConnectionPhase.REGISTERING_PROFILE -> false to "正在注册 HID 配置文件..."
-            ConnectionPhase.RECONNECTING -> false to "正在自动回连已配对设备..."
-            ConnectionPhase.LISTENING -> false to "等待主机连接..."
-            ConnectionPhase.DISCOVERABLE -> false to "等待主机连接 — 手机可被发现 (蓝牙)"
-            ConnectionPhase.CONNECTED -> true to "已连接 (蓝牙)"
-            ConnectionPhase.DISCONNECTED -> false to "主机已断开"
-            ConnectionPhase.ERROR -> false to "蓝牙错误"
+            ConnectionPhase.IDLE -> false to "Not started"
+            ConnectionPhase.REGISTERING_PROFILE -> false to "Registering HID profile..."
+            ConnectionPhase.RECONNECTING -> false to "Reconnecting to paired device..."
+            ConnectionPhase.LISTENING -> false to "Waiting for host connection..."
+            ConnectionPhase.DISCOVERABLE -> false to "Waiting for host — phone is discoverable (Bluetooth)"
+            ConnectionPhase.CONNECTED -> true to "Connected (Bluetooth)"
+            ConnectionPhase.DISCONNECTED -> false to "Host disconnected"
+            ConnectionPhase.ERROR -> false to "Bluetooth error"
         }
         _connectionState.value = _connectionState.value.copy(
             connected = connected,
@@ -558,9 +558,9 @@ class ConnectionManager @Inject constructor(
     }
 
     private fun handleServerToClient(msg: ServerToClient) {
-        // 电脑发来 Hello（或任何非断开消息）而手机尚未进入 WiFi 协议时，手机再次
-        // 发送带设备名和 MAC 的 Hello 完成握手；手动输入 IP 连接时电脑端就是从
-        // 这里读取设备名和 MAC。已连接后不再回应，避免与电脑的 Hello 应答形成循环。
+        // 电脑发来 Hello（或任何非Disconnect消息）而手机尚未Enter WiFi 协议时，手机再次
+        // 发送带设备名和 MAC 的 Hello 完成握手；手动输入 IP Connect时电脑端就是从
+        // 这里读取设备名和 MAC。Connected后不再回应，避免与电脑的 Hello 应答形成循环。
         if (msg.payloadCase != ServerToClient.PayloadCase.DISCONNECT &&
             activeProtocol != ActiveProtocol.WIFI
         ) {
@@ -571,7 +571,7 @@ class ConnectionManager @Inject constructor(
             udpService.clearPcAddress()
             udpService.resumeBroadcast()
             activeProtocol = ActiveProtocol.NONE
-            _connectionState.value = ConnectionState(statusText = "已断开")
+            _connectionState.value = ConnectionState(statusText = "Disconnected")
             clearTriggerEffects()
             return
         }
@@ -588,7 +588,7 @@ class ConnectionManager @Inject constructor(
             activeProtocol = ActiveProtocol.NONE
             _connectionState.value = _connectionState.value.copy(
                 connected = false, phase = ConnectionPhase.LISTENING,
-                statusText = "连接已断开"
+                statusText = "Disconnected"
             )
             clearTriggerEffects()
             return
@@ -611,7 +611,7 @@ class ConnectionManager @Inject constructor(
                 controllerOutputExecutor.execute {
                     if (hasVibration) {
                         val active = rumbleLow != 0 || rumbleHigh != 0
-                        // 仅在非 0 或由动到静时下发；持续重复的 0 不再每帧发停止指令。
+                        // 仅在非 0 或由动到静时Down发；持续重复的 0 不再每帧发Stop指令。
                         if (active || !gameRumbleStopped) {
                             gameRumbleStopped = !active
                             onRumbleRequest?.invoke(rumbleLow, rumbleHigh)
@@ -732,7 +732,7 @@ class ConnectionManager @Inject constructor(
         stopAutoReconnect()
         _connectionState.value = _connectionState.value.copy(
             connected = true, phase = ConnectionPhase.CONNECTED,
-            statusText = "已连接（WiFi）"
+            statusText = "Connected (WiFi)"
         )
         sendDeviceHello()
     }
@@ -741,7 +741,7 @@ class ConnectionManager @Inject constructor(
         activeProtocol = ActiveProtocol.USB
         _connectionState.value = _connectionState.value.copy(
             connected = true, phase = ConnectionPhase.CONNECTED,
-            statusText = "已连接（USB）"
+            statusText = "Connected (USB)"
         )
         sendDeviceHelloUsb()
     }
@@ -798,9 +798,9 @@ class ConnectionManager @Inject constructor(
     var onTriggerEffectsRequest: ((left: ByteArray?, right: ByteArray?) -> Unit)? = null
     var onTriggerRumbleRequest: ((left: Int, right: Int) -> Unit)? = null
 
-    // PC 无震动时仍会每帧下发 0 值。这里缓存每条震动通路的“已停止”状态，只在由动到静
-    // （下落沿）时下发一次停止，之后重复的 0 直接丢弃，避免每帧都重复发停止指令。非 0 值
-    // 仍每帧下发，保留各后端既有的保活/刷新行为。主要由 controllerOutputExecutor 单线程访问。
+    // PC NoneVibration时仍会每帧Down发 0 值。这里缓存每条Vibration通路的“已Stop”Status，只在由动到静
+    // （Down落沿）时Down发一次Stop，之后重复的 0 直接丢弃，避免每帧都重复发Stop指令。非 0 值
+    // 仍每帧Down发，保留各后端既有的保活/Refresh行为。主要由 controllerOutputExecutor 单线程访问。
     @Volatile
     private var gameRumbleStopped = true
 
@@ -886,8 +886,8 @@ class ConnectionManager @Inject constructor(
                 bluetoothService?.sendMouseReport(btn.toByte(), dx, dy, wheel, hWheel)
             }
             ConnectionMode.WIFI -> {
-                // 鼠标数据不再走独立 UDP 包，而是写入 ViewModel 的 _gamepadState。
-                // 普通手柄循环包（每 ~10ms）自动带上最新的鼠标字段，合并为一个包。
+                // Mouse数据不再走独立 UDP 包，而是写入 ViewModel 的 _gamepadState。
+                // 普通Controller循环包（每 ~10ms）自动带Up最新的Mouse字段，合并为一个包。
                 if (activeProtocol != ActiveProtocol.WIFI) return
                 onMouseReport?.invoke(
                     button.toInt(), dx.toInt(), dy.toInt(), wheel.toInt(), hWheel.toInt()
@@ -899,7 +899,7 @@ class ConnectionManager @Inject constructor(
                     button.toInt(), dx.toInt(), dy.toInt(), wheel.toInt(), hWheel.toInt()
                 )
             }
-            // 本机模式的虚拟鼠标由 GamepadInjector 创建并更新。
+            // Local模式的虚拟Mouse由 GamepadInjector Create并更新。
             ConnectionMode.LOCAL -> {}
         }
     }

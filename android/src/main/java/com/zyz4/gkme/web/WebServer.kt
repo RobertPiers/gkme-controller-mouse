@@ -26,13 +26,13 @@ import java.security.MessageDigest
 import java.util.UUID
 
 /**
- * 被控端内置的 HTTP + WebSocket 服务器：托管 `assets/web` 下的 GKME-Web 网页手柄，
- * 并把浏览器的输入桥接到 [ControlledHostManager]（注入本机虚拟手柄）。
+ * Host内置的 HTTP + WebSocket 服务器: 托管 `assets/web` Down的 GKME-Web Web controller，
+ * 并把浏览器的输入桥接到 [ControlledHostManager]（注入Local虚拟Controller）。
  *
- * 浏览器使用与 Android 客户端完全相同的 protobuf 协议，仅帧格式不同：每个
+ * 浏览器使用与 Android 客户端完全相同的 protobuf 协议，仅帧格式不同: 每个
  * WebSocket 二进制帧为 `[1 字节类型][protobuf 负载]`，类型常量与 UDP 传输一致
- * （[ControlledHostManager] 的 `TYPE_CLIENT_TO_SERVER` / `TYPE_GAMEPAD_INPUT` 上行，
- * `TYPE_SERVER_TO_CLIENT` 下行）。
+ * （[ControlledHostManager] 的 `TYPE_CLIENT_TO_SERVER` / `TYPE_GAMEPAD_INPUT` Up行，
+ * `TYPE_SERVER_TO_CLIENT` Down行）。
  *
  * 逻辑对齐电脑端 `Web/WebServer.cs`。
  */
@@ -73,7 +73,7 @@ object WebServer {
                     launch { handleClient(client) }
                 }
             } catch (e: Exception) {
-                if (running) Log.w(TAG, "HTTP 端口 $HTTP_PORT 不可用: ${e.message}")
+                if (running) Log.w(TAG, "HTTP port $HTTP_PORT is unavailable: ${e.message}")
             } finally {
                 try { ss?.close() } catch (_: Exception) {}
                 serverSocket = null
@@ -89,7 +89,7 @@ object WebServer {
         scope = null
     }
 
-    /** 构造某个网卡地址对应的网页手柄 URL。 */
+    /** 构造某个网卡地址对应的Web controller URL。 */
     fun buildUrl(address: String): String = "http://$address:$HTTP_PORT/"
 
     /** 列出可用的 IPv4 局域网网卡（跳过回环与链路本地地址）。 */
@@ -115,7 +115,7 @@ object WebServer {
         return list
     }
 
-    /** 首选的局域网地址：优先私有网段，否则回退第一个可用地址。 */
+    /** 首选的局域网地址: 优先私有网段，否则回退第一个可用地址。 */
     fun primaryLanAddress(): String? {
         val all = enumerateLanInterfaces()
         if (all.isEmpty()) return null
@@ -130,7 +130,7 @@ object WebServer {
         return second in 16..31
     }
 
-    // ────────────────────────── 连接处理 ──────────────────────────
+    // ────────────────────────── Connect处理 ──────────────────────────
 
     private suspend fun handleClient(socket: Socket) {
         val input: InputStream
@@ -147,7 +147,7 @@ object WebServer {
         }
 
         try {
-            // HTTP/1.1 keep-alive：在同一 socket 上持续处理请求，直到对端关闭或升级为 WebSocket。
+            // HTTP/1.1 keep-alive: 在同一 socket Up持续处理请求，直到对端Close或升级为 WebSocket。
             while (running) {
                 val header = readRequestHeader(input) ?: break
                 val req = HttpRequest.parse(header) ?: break
@@ -196,7 +196,7 @@ object WebServer {
 
         val id = req.query["id"]?.takeIf { it.isNotBlank() }
             ?: UUID.randomUUID().toString().replace("-", "")
-        val name = req.query["name"]?.takeIf { it.isNotBlank() } ?: "Web 浏览器"
+        val name = req.query["name"]?.takeIf { it.isNotBlank() } ?: "Web browser"
 
         val device = ControlledDevice(ip = clientIp, name = name, mac = id, isWeb = true)
 
@@ -237,7 +237,7 @@ object WebServer {
             path.trimStart('/')
         }
 
-        // 目录穿越防护：解析后的路径不得离开 web 根。
+        // 目录穿越防护: 解析后的路径不得离开 web 根。
         if (relative.split('/').any { it == ".." }) {
             writeResponse(output, 403, "Forbidden", "text/plain",
                 "Forbidden.".toByteArray(Charsets.UTF_8))
@@ -249,7 +249,7 @@ object WebServer {
 
         var bytes = readAsset(context, assetPath)
         if (bytes == null) {
-            // 无扩展名的未知路由回退到 index.html（对齐 SPA 行为）。
+            // None扩展名的未知路由回退到 index.html（对齐 SPA 行为）。
             val fallback = !assetPath.substringAfterLast('/').contains('.')
             if (fallback) bytes = readAsset(context, "$WEB_ASSET_ROOT/index.html")
         }
@@ -368,7 +368,7 @@ object WebServer {
 
     // ────────────────────────── WebSocket 帧编解码 ──────────────────────────
 
-    /** 极简 RFC 6455 服务端实现：仅处理二进制/文本/关闭/ping 帧。 */
+    /** 极简 RFC 6455 服务端实现: 仅处理二进制/文本/Close/ping 帧。 */
     private class WebSocketConnection(
         private val input: InputStream,
         private val output: OutputStream,
@@ -379,7 +379,7 @@ object WebServer {
 
         private val sendLock = Any()
 
-        /** 读取一个完整的（可能分片）数据消息；对端关闭返回 null。 */
+        /** 读取一个完整的（可能分片）数据消息；对端CloseBack null。 */
         fun readMessage(): ByteArray? {
             val acc = ByteArrayOutputStream()
             while (true) {

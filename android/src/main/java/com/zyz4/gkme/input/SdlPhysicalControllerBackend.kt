@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.update
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** 触摸板归一化输出域：x ∈ 0..1919、y ∈ 0..942（与 uhid/AIDL 约定一致）。 */
+/** Touchpad归一化输出域: x ∈ 0..1919、y ∈ 0..942（与 uhid/AIDL 约定一致）。 */
 private const val TOUCHPAD_MAX_X = 1919
 private const val TOUCHPAD_MAX_Y = 942
 private const val TOUCHPAD_MAX_XF = 1919f
@@ -152,7 +152,7 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
 
     private var lastPhoneAmp = -1
 
-    /** 普通振动是否已被 HD 通路接管（用于切换时取消残留的普通波形）。 */
+    /** 普通振动是否已被 HD 通路接管（用于切换时Cancel残留的普通波形）。 */
     private var phoneHdOwned = false
 
     // ── Lifecycle ──────────────────────────────────────────
@@ -273,7 +273,7 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
             val androidCount = androidMotorCounts.getOrElse(i) { 0 }
             ControllerInfo(
                 id = SdlNative.nativeGetControllerInstanceId(i),
-                name = SdlNative.nativeGetControllerName(i).ifBlank { "手柄${i + 1}" },
+                name = SdlNative.nativeGetControllerName(i).ifBlank { "Controller${i + 1}" },
                 motorCount = if (androidCount > 0) androidCount else SdlNative.nativeGetControllerMotorCount(i),
                 hasTriggerRumble = SdlNative.nativeGetControllerHasTriggerRumble(i),
                 hasAdaptiveTrigger = false,
@@ -815,7 +815,7 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
         val old1 = activeSlot(1)
 
         // ACTION_POINTER_UP 时 event.pointerCount 仍包含即将抬起的手指；必须把它
-        // 从候选中排除，否则它占用的槽位不会被释放（表现为松开一指后虚拟手柄该槽位仍按住）。
+        // 从候选Center排除，否则它占用的槽 bits不会被释放（表现为Release一指后虚拟Controller该槽 bits仍Hold）。
         val liftedIndex = if (action == MotionEvent.ACTION_POINTER_UP) event.actionIndex else -1
         val candidates = (0 until event.pointerCount)
             .filter { it != liftedIndex }
@@ -839,7 +839,7 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
                 commitTouchpad(x, y, true, localClick, canonicalSlots(s0, s1))
             }
             MotionEvent.ACTION_POINTER_UP -> {
-                // 已被排除抬起手指：primary 为剩余手指（若还有），其余槽位置为 inactive。
+                // 已被排除抬起手指: primary 为剩余手指（若还有），其余槽 bits置为 inactive。
                 val primary = s0 ?: s1
                 if (primary != null) {
                     commitTouchpad(
@@ -931,7 +931,7 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
                 SdlNative.nativeSetControllerLed(i, r, g, b)
             }
             if (SdlNative.nativeGetControllerHasPlayerLed(i)) {
-                // DualSense 的 playerIndicator 是“点亮灯数”模式：玩家 N 亮 N 个灯
+                // DualSense 的 playerIndicator 是“点亮灯数”模式: 玩家 N 亮 N 个灯
                 // （P1=0x04, P2=0x0A, P3=0x15, P4=0x1B, P5=0x1F）。SDL 的 player index
                 // 0..4 对应玩家 1..5，所以用点亮灯数减一得到正确索引。
                 val playerIndex = if (playerLed != 0) {
@@ -1009,7 +1009,7 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
         applyControllerOutput(controllerIndex, outputs)
     }
 
-    /** 强震动(low) → 马达1，弱震动(high) → 马达2；单马达设备取两者较大值。 */
+    /** 强Vibration(low) → motor1，弱Vibration(high) → motor2；单马达设备取两者较大值。 */
     private fun vibratePhoneMotors(low: Int, high: Int, swap: Boolean) {
         val motor0 = if (swap) high else low
         val motor1 = if (swap) low else high
@@ -1043,7 +1043,7 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
             for (i in ids.indices) {
                 val amp = amps.getOrElse(i) { 0 }
                 if (amp > 0) {
-                    // VibrationEffect 不接受 0 幅度；0 幅度马达从组合中剔除即可关闭。
+                    // VibrationEffect 不接受 0 幅度；0 幅度马达从组合Center剔除即可Close。
                     combo.addVibrator(ids[i], VibrationEffect.createOneShot(60000, amp.coerceIn(1, 255)))
                     hasActive = true
                 }
@@ -1052,7 +1052,7 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
                 vm.cancel()
                 return
             }
-            // 非 0 时直接 vibrate：新组合会替换上一个效果，无需先 cancel（避免高频流下残留）。
+            // 非 0 时直接 vibrate: 新组合会替换Up一个效果，None需先 cancel（避免高频流Down残留）。
             vm.vibrate(combo.combine())
         } catch (_: Exception) {}
     }
@@ -1077,7 +1077,7 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
         if (clamped < 1) {
             phoneHdOwned = false
             PhoneHdHaptics.stop(HapticSource.GAME_RUMBLE)
-            // 多马达路径在 VibratorManager 上启动：必须 manager.cancel() 才能停掉全部马达，
+            // 多马达路径在 VibratorManager Up启动: 必须 manager.cancel() 才能停掉全部马达，
             // 只 cancel 默认马达会遗漏其余马达直到 60s one-shot 过期。
             try { phoneVibratorManager()?.cancel() } catch (_: Exception) {}
             try { phoneVibrator()?.cancel() } catch (_: Exception) {}

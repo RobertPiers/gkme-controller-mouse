@@ -38,9 +38,9 @@ export function setDeviceName(name) {
 
 function defaultName() {
   const ua = navigator.userAgent || "";
-  if (/iPhone|iPad|iPod/i.test(ua)) return "iPhone 网页手柄";
-  if (/Android/i.test(ua)) return "Android 网页手柄";
-  return "网页手柄";
+  if (/iPhone|iPad|iPod/i.test(ua)) return "iPhone web controller";
+  if (/Android/i.test(ua)) return "Android web controller";
+  return "Web controller";
 }
 
 export class Connection extends EventTarget {

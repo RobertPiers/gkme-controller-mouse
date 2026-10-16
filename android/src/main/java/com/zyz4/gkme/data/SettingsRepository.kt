@@ -196,7 +196,7 @@ class SettingsRepository @Inject constructor(
             },
             pollingRate = prefs[Keys.POLLING_RATE] ?: 120,
             deviceName = prefs[Keys.DEVICE_NAME] ?: "GKME",
-            currentPresetName = prefs[Keys.CURRENT_PRESET_NAME] ?: "完整控制器",
+            currentPresetName = prefs[Keys.CURRENT_PRESET_NAME] ?: "Full controller",
             vibrationPressType = VibrationType.entries.getOrElse(
                 prefs[Keys.VIBRATION_PRESS_TYPE] ?: VibrationType.VIEW.ordinal
             ) { VibrationType.VIEW },

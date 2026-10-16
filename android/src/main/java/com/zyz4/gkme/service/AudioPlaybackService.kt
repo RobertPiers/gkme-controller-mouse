@@ -114,15 +114,15 @@ class AudioPlaybackService @Inject constructor(
     private var hdOutputActive = false
     private var hdOutputIndex = -1
 
-    // 手机马达 HD 震动：分析语音线圈 PCM 的主导音高，映射成 RichTap HE 频率，
-    // 让手机马达的“音调”跟随 PCM。
+    // Phone motor HD Vibration: 分析语音线圈 PCM 的主导音高，映射成 RichTap HE 频率，
+    // 让Phone motor的“音调”跟随 PCM。
     private val phonePitchTracker = PcmPitchTracker()
 
     @Volatile
     private var lastHdRumbleUpdateNs = 0L
 
-    // 自适应扳机 → 手柄 HD 震动：目标手柄可能和语音线圈设备不是同一个，所以这条
-    // 通路按控制器索引寻址。Switch 系握手柄收原生 HD 频带；DualSense 收本地合成的
+    // Adaptive triggers → Controller HD Vibration: 目标Controller可能和语音线圈设备不是同一个，所以这条
+    // 通路按控制器索引寻址。Switch 系握Controller收原生 HD 频带；DualSense 收本地合成的
     // 语音线圈音调流。合成参数由控制器输出线程写入、合成线程读取。
     private var adaptiveThread: Thread? = null
 
@@ -144,7 +144,7 @@ class AudioPlaybackService @Inject constructor(
     @Volatile
     private var adaptiveRightFreqHz = 0.0
 
-    // 已下发到 Switch 手柄的原生 HD 频带状态（-1 表示未激活），用于去重。
+    // 已Down发到 Switch controller的原生 HD 频带Status（-1 表示未激活），用于去重。
     private var adaptiveHdIndex = -1
     private var adaptiveHdLeftAmp = -1
     private var adaptiveHdRightAmp = -1
@@ -1033,12 +1033,12 @@ class AudioPlaybackService @Inject constructor(
     }
 
     /** Drives the phone motors from the voice-coil channels; motor0 = left, motor1 = right.
-     *  [pitchHz] 为 PCM 估计的主导音高（Hz），供 HD 震动映射使用；0 表示未知。 */
+     *  [pitchHz] 为 PCM 估计的主导音高（Hz），供 HD Vibration映射使用；0 表示未知。 */
     private fun vibratePhoneMotors(left: Int, right: Int, swap: Boolean, pitchHz: Double = 0.0) {
         val m0 = (if (swap) right else left).coerceIn(0, 255)
         val m1 = (if (swap) left else right).coerceIn(0, 255)
-        // HD 路径自行处理静音（冲刷已缓冲的分块 + 延迟停止），因此静音也交给它，
-        // 避免“刚投递就被停止”。它返回 true 表示 HD 已接管（含静音）。
+        // HD 路径自行处理静音（冲刷已缓冲的分块 + 延迟Stop），因此静音也交给它，
+        // 避免“刚投递就被Stop”。它Back true 表示 HD 已接管（含静音）。
         if (HdPcmStreamer.submit(m0, m1, pitchHz)) return
         if (m0 <= 1 && m1 <= 1) return
         val now = System.currentTimeMillis()

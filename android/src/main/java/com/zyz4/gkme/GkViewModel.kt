@@ -212,8 +212,8 @@ class GkViewModel @Inject constructor(
     var onHapticFeedbackRelease: (() -> Unit)? = null
 
     init {
-        // ConnectionManager 异步加载持久化设置；在加载完成前 settings 仍是默认值，
-        // 若此时初始化会把默认设置写回持久化，覆盖用户配置。故等待加载完成再初始化。
+        // ConnectionManager 异步加载持久化Settings；在加载完成前 settings 仍是默认值，
+        // 若此时初始化会把默认Settings写回持久化，覆盖用户配置。故等待加载完成再初始化。
         viewModelScope.launch {
             connectionManager.settingsLoaded.first { it }
             applyInitialSettings()
@@ -226,7 +226,7 @@ class GkViewModel @Inject constructor(
         if (settings.value.gyroEnabled) {
             startSensorDisplay()
         }
-        // 启动时如果外观颜色绑定了LED，立即同步初始LED颜色
+        // 启动时如果Appearance颜色绑定了LED，立即同步初始LED颜色
         if (settings.value.ledBoundColors.isNotEmpty()) {
             val updated = LedAppearance.applyLedColor(settings.value, 0)
             if (updated != settings.value) {
@@ -266,7 +266,7 @@ class GkViewModel @Inject constructor(
 
     /**
      * 将指定内置预设恢复为出厂内置内容，覆盖用户此前的修改。
-     * 若当前正选中该预设，则同步刷新界面上的布局。
+     * 若当前正选Center该预设，则同步Refresh界面Up的Layout。
      */
     fun restoreBuiltInPreset(name: String): LayoutPreset? {
         val fresh = layoutRepository.reloadBuiltInPreset(name) ?: return null
@@ -333,8 +333,8 @@ class GkViewModel @Inject constructor(
     }
 
     fun applyLayoutGyroSettings(preset: LayoutPreset) {
-        // 切换布局时旧 View 会被销毁，若陀螺仪激活按钮正被按住，其抬起事件不会再到达，
-        // 计数器会泄漏并让陀螺仪一直处于激活状态，故在应用新布局时归零。
+        // 切换Layout时旧 View 会被销毁，若Gyroscope激活Button正被Hold，其抬起事件不会再到达，
+        // 计数器会泄漏并让Gyroscope一直处于激活Status，故在应用新Layout时归零。
         _gyroActivateCount = 0
         updateGyroOverrideFromCount()
         preset.gyroOrientation?.let {
@@ -761,7 +761,7 @@ class GkViewModel @Inject constructor(
             GamepadState.DPAD_DOWN or GamepadState.DPAD_RIGHT -> GamepadState.DPAD_DOWN_RIGHT
             else -> 0
         }
-        
+
         _gamepadState.value = _gamepadState.value.copy(
             buttons = phoneButtons or physicalMappedButtonBits,
             mouseButtons = combinedMouseButtons,
@@ -958,11 +958,11 @@ class GkViewModel @Inject constructor(
     fun startServer() {
         connectionManager.startServer(viewModelScope)
         connectionManager.onMouseReport = { _, dx, dy, wheel, hWheel ->
-            // 累加值不再截断到 ±127：快速滑动会在一个发送周期内累计出上百像素，
+            // 累加值不再截断到 ±127: 快速滑动会在一个发送周期内累计出Up百像素，
             // 旧的 ±127 截断会丢弃溢出部分，导致“滑得越快转得越少”。协议字段是
-            // sint32，按 Short 范围保留即可，由每个发送周期整体下发。
-            // 注意：这里不再写入 mouseButtons，鼠标键位只由 onButtonDown/onButtonUp
-            // 与 onMouseGestureButton 维护，避免移动/滚轮包覆盖按住的键。
+            // sint32，按 Short 范围保留即可，由每个发送周期整体Down发。
+            // 注意: 这里不再写入 mouseButtons，Mouse键 bits只由 onButtonDown/onButtonUp
+            // 与 onMouseGestureButton 维护，避免移动/滚轮包覆盖Hold的键。
             _gamepadState.value = _gamepadState.value.copy(
                 mouseDx = (dx.toInt() + _gamepadState.value.mouseDx.toInt()).coerceIn(-32768, 32767).toShort(),
                 mouseDy = (dy.toInt() + _gamepadState.value.mouseDy.toInt()).coerceIn(-32768, 32767).toShort(),
@@ -1099,7 +1099,7 @@ class GkViewModel @Inject constructor(
         connectionManager.stopServer()
     }
 
-    /** 更新服务未运行时的状态栏文案（本机模式 Shizuku 授权进度 / 失败）。 */
+    /** 更新服务未运行时的Status栏文案（Local模式 Shizuku 授权进度 / 失败）。 */
     fun setLocalModeStatus(text: String) {
         connectionManager.setIdleStatus(text)
     }
@@ -1158,7 +1158,7 @@ class GkViewModel @Inject constructor(
                 }
 
                 // Apply gyro coordinate system transformation
-                // sensor.gyroX = 俯仰(Pitch), sensor.gyroY = 偏航(Yaw), sensor.gyroZ = 滚转(Roll)
+                // sensor.gyroX = 俯仰(Pitch), sensor.gyroY = Yaw(Yaw), sensor.gyroZ = Roll(Roll)
                 // Original mapping: mouseX = -gyroY(Yaw→水平), mouseY = -gyroX(Pitch→垂直)
                 // mappedX = 最终输出到水平轴的值, mappedY = 最终输出到垂直轴的值
                 val coordinateSystem = s.gyroCoordinateSystem
@@ -1180,7 +1180,7 @@ class GkViewModel @Inject constructor(
                     Triple(0f, 0f, 0f)
                 }
 
-                var mappedX: Float    // 水平 = 偏航yaw (原始默认行为: gyroMx = -gy = -mappedX)
+                var mappedX: Float    // 水平 = Yawyaw (原始默认行为: gyroMx = -gy = -mappedX)
                 var mappedY: Float    // 垂直 = 俯仰pitch (原始默认行为: gyroMy = -gx = -mappedY)
 
                 when (coordinateSystem) {
@@ -1215,7 +1215,7 @@ class GkViewModel @Inject constructor(
                     val mag = sqrt(mappedX * mappedX + mappedY * mappedY)
                     if (mag > 0f) {
                         val normalized = (mag / gyroDeadZoneMaxRate).coerceIn(0f, 1f)
-                        // 死区优先：死区内恒输出 0，反死区只在死区之外抬升下限。
+                        // 死区优先: 死区内恒输出 0，反死区只在死区之外抬升Down限。
                         val afterDeadZone = if (normalized <= gyroDeadZone) 0f
                                             else (normalized - gyroDeadZone) / (1f - gyroDeadZone)
                         val afterReverseDeadZone = if (afterDeadZone == 0f) 0f
@@ -1226,7 +1226,7 @@ class GkViewModel @Inject constructor(
                     }
                 }
 
-                // 陀螺仪转摇杆/转鼠标共用的灵敏度曲线：在死区之后、灵敏度之前，按满量程径向映射。
+                // Gyroscope转Stick/转Mouse共用的Sensitivity curve: 在死区之后、Sensitivity之前，按满量程径向映射。
                 // 其它模式把 mappedX/Y 当角速度使用，不做曲线。
                 if (s.gyroMode == GyroMode.MOUSE ||
                     s.gyroMode == GyroMode.LEFT_STICK ||
@@ -1467,12 +1467,12 @@ class GkViewModel @Inject constructor(
         }
     }
 
-    /** 上报用的鼠标键位：屏幕按钮/物理映射（[GamepadState.mouseButtons]）与鼠标板
-     *  手势键位（[GamepadState.mouseGestureButtons]）取并集。 */
+    /** Up报用的Mouse键 bits: 屏幕Button/物理映射（[GamepadState.mouseButtons]）与Mouse板
+     *  手势键 bits（[GamepadState.mouseGestureButtons]）取并集。 */
     fun effectiveMouseButtons(userButtons: Int = _gamepadState.value.mouseButtons): Int =
         userButtons or _gamepadState.value.mouseGestureButtons
 
-    /** 鼠标板手势/拖拽键位（bit0=LMB, bit1=RMB, bit2=MMB）的按下/抬起。 */
+    /** Mouse板手势/拖拽键 bits（bit0=LMB, bit1=RMB, bit2=MMB）的Press/抬起。 */
     fun onMouseGestureButton(bit: Int, down: Boolean) {
         val cur = _gamepadState.value.mouseGestureButtons
         val next = if (down) cur or bit else cur and bit.inv()
@@ -1622,7 +1622,7 @@ class GkViewModel @Inject constructor(
         _gamepadState.value = _gamepadState.value.copy(buttons = b)
     }
 
-    
+
 
     fun onLeftStick(x: Short, y: Short) {
         phoneStickX = x
@@ -1790,7 +1790,7 @@ class GkViewModel @Inject constructor(
         )
     }
 
-    
+
 }
 
 /** Trigger value (0..255) above which a remapped LT/RT counts as pressed. */

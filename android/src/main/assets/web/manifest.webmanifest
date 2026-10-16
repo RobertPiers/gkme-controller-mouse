@@ -1,7 +1,7 @@
 {
-  "name": "GKME 网页手柄",
+  "name": "GKME Web Controller",
   "short_name": "GKME",
-  "description": "把浏览器变成虚拟游戏手柄控制器",
+  "description": "Turn your browser into a virtual game controller",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

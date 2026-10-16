@@ -194,7 +194,7 @@ public class UsbDriverService extends Service implements UsbDriverListener {
 
                     usbManager.requestPermission(device, PendingIntent.getBroadcast(UsbDriverService.this, 0, i, intentFlags));
                 } catch (SecurityException e) {
-                    Toast.makeText(this, "USB 设备被系统策略禁止访问", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "System policy blocks access to this USB device", Toast.LENGTH_LONG).show();
                     if (stateListener != null) {
                         stateListener.onUsbPermissionPromptCompleted();
                     }

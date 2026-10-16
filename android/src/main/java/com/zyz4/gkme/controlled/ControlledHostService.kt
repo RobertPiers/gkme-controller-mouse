@@ -24,11 +24,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * 被控端前台服务：以常驻通知持有 [ControlledHostManager] 的生命周期，避免熄屏或
+ * Host前台服务: 以常驻通知持有 [ControlledHostManager] 的生命周期，避免熄屏或
  * 切到后台后被系统杀进程。[ControlledActivity] 只负责界面展示，离开页面后服务
- * 继续监听控制端；用户可通过通知的“停止”操作结束。
+ * 继续监听控制端；用户可通过通知的“Stop”操作结束。
  *
- * 当开关开启「悬浮窗保活」时，服务会持有一个 1×1 透明悬浮窗（见 [FloatingKeepAlive]），
+ * 当开关开启「Keep-alive overlay”时，服务会持有一个 1×1 透明悬浮窗（见 [FloatingKeepAlive]），
  * 让系统把本进程视为可见窗口，降低后台/熄屏被回收的概率。
  */
 @AndroidEntryPoint
@@ -42,7 +42,7 @@ class ControlledHostService : Service() {
         private const val CHANNEL_ID = "controlled_mode"
         private const val NOTIFICATION_ID = 4102
 
-        /** 启动（或确认）被控端前台服务。 */
+        /** 启动（或Confirm）Host前台服务。 */
         fun start(context: Context) {
             ContextCompat.startForegroundService(
                 context,
@@ -50,7 +50,7 @@ class ControlledHostService : Service() {
             )
         }
 
-        /** 停止前台服务并结束被控端主机。 */
+        /** Stop前台服务并结束Host主机。 */
         fun stop(context: Context) {
             context.stopService(Intent(context, ControlledHostService::class.java))
         }
@@ -73,7 +73,7 @@ class ControlledHostService : Service() {
             return START_NOT_STICKY
         }
         startForeground(NOTIFICATION_ID, buildNotification(ControlledHostManager.state.value.statusText))
-        // 进程被系统重建时 Activity 可能尚未创建，这里兜底初始化 Shizuku 环境。
+        // 进程被系统重建时 Activity 可能尚未Create，这里兜底初始化 Shizuku status。
         GamepadInjector.init(this)
         GamepadInjector.ensureBound()
         ControlledHostManager.start()
@@ -96,7 +96,7 @@ class ControlledHostService : Service() {
         super.onDestroy()
     }
 
-    /** 跟随「悬浮窗保活」开关启停：设置变化时立即生效，进程重建后也能恢复。 */
+    /** 跟随「Keep-alive overlay”开关启停: Settings变化时立即生效，进程重建后也能恢复。 */
     private fun startFloatingKeepAlive() {
         if (keepAliveJob != null) return
         val s = scope ?: return
@@ -128,10 +128,10 @@ class ControlledHostService : Service() {
         val manager = getSystemService(NotificationManager::class.java) ?: return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "被控端",
+            "Host",
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
-            description = "被控端运行期间的常驻通知，用于防止后台被系统清理"
+            description = "Persistent notification to keep the host service running in the background"
             setShowBadge(false)
         }
         manager.createNotificationChannel(channel)
@@ -156,14 +156,14 @@ class ControlledHostService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("GKME 被控端运行中")
+            .setContentTitle("GKME host is running")
             .setContentText(statusText)
             .setSmallIcon(R.drawable.ic_home)
             .setOngoing(true)
             .setShowWhen(false)
             .setContentIntent(contentIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .addAction(0, "停止", stopIntent)
+            .addAction(0, "Stop", stopIntent)
             .build()
     }
 }

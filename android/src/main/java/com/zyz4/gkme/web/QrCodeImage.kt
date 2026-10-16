@@ -2,7 +2,7 @@ package com.zyz4.gkme.web
 
 import android.graphics.Bitmap
 
-/** 把 [QrCode] 模块矩阵渲染为 ARGB_8888 位图（白底黑块）。 */
+/** 把 [QrCode] 模块矩阵渲染为 ARGB_8888  bits图（白底黑块）。 */
 object QrCodeImage {
 
     fun render(text: String, ecc: QrEcc = QrEcc.MEDIUM, scale: Int = 4, border: Int = 4): Bitmap {

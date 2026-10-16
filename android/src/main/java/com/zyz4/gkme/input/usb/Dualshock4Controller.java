@@ -51,7 +51,7 @@ public class Dualshock4Controller extends AbstractDualSenseController {
          return false;
       }
 
-      // 输入报文按绝对字节索引解析（buffer.get(i)/getShort(i)），无需移动游标。
+      // 输入报文按绝对字节索引解析（buffer.get(i)/getShort(i)），None需移动游标。
 
       // Process D-pad (buttons0 & 0x0F)
       int dpad = buffer.get(5) & 0x0F;
@@ -124,7 +124,7 @@ public class Dualshock4Controller extends AbstractDualSenseController {
       int accely = buffer.getShort(21);
       int accelz = buffer.getShort(23);
 
-      // 转换陀螺仪数据到 deg/s
+      // 转换Gyroscope数据到 deg/s
       float gyroX_dps = gyrox * GYRO_SCALE;
       float gyroY_dps = gyroy * GYRO_SCALE;
       float gyroZ_dps = gyroz * GYRO_SCALE;

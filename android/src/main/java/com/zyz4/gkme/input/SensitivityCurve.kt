@@ -25,15 +25,15 @@ object SensitivityCurve {
      * Built-in presets. [Preset.points] are flat `[x0, y0, x1, y1, ...]` pairs strictly inside
      * `(0, 1)`; the implicit `(0, 0)` / `(1, 1)` anchors are supplied by [buildKnots].
      *
-     * - `即时`: convex bulge above the diagonal, so small inputs map to larger outputs.
-     * - `延时`: concave dip below the diagonal, so larger inputs are needed for the same output.
-     * - `动态`: S-shaped, above the diagonal before the midpoint and below after it, while the
+     * - `Immediate`: convex bulge above the diagonal, so small inputs map to larger outputs.
+     * - `Delay`: concave dip below the diagonal, so larger inputs are needed for the same output.
+     * - `Dynamic`: S-shaped, above the diagonal before the midpoint and below after it, while the
      *   `(0.5, 0.5)` midpoint stays fixed.
      */
     val PRESETS: List<Preset> = listOf(
-        Preset("即时", listOf(0.4f, 0.6f)),
-        Preset("延时", listOf(0.6f, 0.4f)),
-        Preset("动态", listOf(0.25f, 0.34f, 0.5f, 0.5f, 0.75f, 0.66f)),
+        Preset("Immediate", listOf(0.4f, 0.6f)),
+        Preset("Delay", listOf(0.6f, 0.4f)),
+        Preset("Dynamic", listOf(0.25f, 0.34f, 0.5f, 0.5f, 0.75f, 0.66f)),
     )
 
     /** Evaluates the curve's `y` for an input `t` in `[0, 1]`. Returns [t] for an empty curve. */

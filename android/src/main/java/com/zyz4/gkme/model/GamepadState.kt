@@ -24,8 +24,8 @@ data class GamepadState(
     val isCharging: Boolean = false,
     // Mouse fields for WiFi/UDP mode
     val mouseButtons: Int = 0,
-    // 鼠标板手势/拖拽产生的鼠标键位，与 [mouseButtons]（屏幕按钮、物理映射）分开保存，
-    // 上报时取并集，避免任一来源释放时把另一方按住的键一起清掉。
+    // Mouse板手势/拖拽产生的Mouse键 bits，与 [mouseButtons]（屏幕Button、物理映射）分开Save，
+    // Up报时取并集，避免任一来源释放时把另一方Hold的键一起清掉。
     val mouseGestureButtons: Int = 0,
     val mouseDx: Short = 0,
     val mouseDy: Short = 0,
@@ -63,9 +63,9 @@ data class GamepadState(
         const val MOUSE_LMB = 0x80000  // bit 19
         const val MOUSE_RMB = 0x100000  // bit 20
         const val MOUSE_MMB = 0x200000  // bit 21
-        // 鼠标侧键：bit 26/27（避开物理输入专用的 paddle 位 22-25）
-        const val MOUSE_BACK = 0x4000000  // bit 26 鼠标后退键（Windows Button 4）
-        const val MOUSE_FORWARD = 0x8000000  // bit 27 鼠标前进键（Windows Button 5）
+        // Mouse侧键: bit 26/27（避开物理输入专用的 paddle  bits 22-25）
+        const val MOUSE_BACK = 0x4000000  // bit 26 Mouse后退键（Windows Button 4）
+        const val MOUSE_FORWARD = 0x8000000  // bit 27 Mouse前进键（Windows Button 5）
         const val DPAD_UP = 1
         const val DPAD_DOWN = 2
         const val DPAD_LEFT = 4

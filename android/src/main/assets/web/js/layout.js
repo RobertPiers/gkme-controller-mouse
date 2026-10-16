@@ -75,25 +75,25 @@ export function normalizeButton(raw) {
   if (c && c.isDpad) b.isDpad = true;
   if (c && c.isSettings) b.isSettings = true;
   if (b.isCustom && !b.customBits) b.customBits = [];
-  if (b.isCustom && b.customText == null) b.customText = "自定义";
+  if (b.isCustom && b.customText == null) b.customText = "Custom";
   return b;
 }
 
 // Appearance defaults, transposed 1:1 from AppSettings.kt (SOLID_COLOR fills).
-// 描边宽度（*OutlineWidth）以「实际屏幕像素」为准，绘制时经 _outlineW 换算；
-// 其余尺寸单位为 CSS px（页面以 viewport width=device-width 渲染，近似 dp）。
+// 描边Width（*OutlineWidth）以「实际屏幕像素”为准，绘制时经 _outlineW 换算；
+// 其余尺寸单 bits为 CSS px（页面以 viewport width=device-width 渲染，近似 dp）。
 export const DEFAULT_APPEARANCE = {
-  // ── 背景 ──
+  // ── Background ──
   bgFillType: 0, // 0 = SOLID_COLOR, 1 = IMAGE
   bgColor: "#000000",
   bgImage: null,
-  // ── 按钮 ──
+  // ── Button ──
   btnFillType: 0,
   btnColor: "#1A1A1A",
   btnImage: null,
   btnOutlineColor: "#666666",
   btnOutlineWidth: 4,
-  // ── 摇杆 ──
+  // ── Stick ──
   joyBaseFillType: 0,
   joyBaseColor: "#222222",
   joyBaseImage: null,
@@ -113,19 +113,19 @@ export const DEFAULT_APPEARANCE = {
   dpadPadTriggerOutlineWidth: 4,
   linearTriggerBoxOutlineColor: "#888888",
   linearTriggerBoxOutlineWidth: 4,
-  // ── 触摸板 ──
+  // ── Touchpad ──
   tpFillType: 0,
   tpColor: "#121212",
   tpImage: null,
   tpOutlineColor: "#666666",
   tpOutlineWidth: 4,
-  // ── 一体十字键 / 自定义按键盘 ──
+  // ── D-pad / Custom keypad ──
   dpadPadFillType: 0,
   dpadPadColor: "#1A1A1A",
   dpadPadImage: null,
   dpadPadOutlineColor: "#666666",
   dpadPadOutlineWidth: 4,
-  // ── 图标颜色 ──
+  // ── Icon color ──
   btnIconColor: "#CCCCCC",
   joyIconColor: "#CCCCCC",
   tpIconColor: "#666666",
@@ -140,16 +140,16 @@ export const TOUCHPAD_RADIUS_DP = 10; // touchpad
 export const HANDLE_SIZE_DP = 8;
 export const MARKER_DIST_DP = 4;
 
-// Fallback extrapolation frame for 快速响应模式 (ButtonPosition.PREDICTION_FRAME_MS).
+// Fallback extrapolation frame for Fast response mode (ButtonPosition.PREDICTION_FRAME_MS).
 const PREDICTION_FRAME_MS = 16;
 
-// ── 摇杆触摸板（速度）模式常量，镜像 JoystickView.kt ──
-// 摇杆偏移 = 手指速度 × 该时间常数（再按最大行程归一化、乘灵敏度）。
-// 100% 灵敏度下，手指以当前速度再移动 0.1s 的距离恰好对应满量程。
+// ── StickTouchpad（速度）模式常量，镜像 JoystickView.kt ──
+// Stick偏移 = 手指速度 × 该时间常数（再按最大Travel归一化、乘Sensitivity）。
+// 100% SensitivityDown，手指以当前速度再移动 0.1s 的距离恰好对应满量程。
 const VELOCITY_TIME_CONSTANT = 0.1;
 // 尚未识别到采样率时，归零看门狗使用的兜底采样间隔（ms）。
 const MIN_SAMPLE_INTERVAL_MS = 2;
-// 手指停下后等待多少个采样间隔归零回中（至少 1 个间隔）。
+// 手指停Down后等待多少个采样间隔归零回Center（至少 1 个间隔）。
 const VELOCITY_RESET_INTERVALS = 2;
 
 // Circle-shaped buttons (AppearanceApplier.isCircleButton).
@@ -167,7 +167,7 @@ function isCircleButton(id) {
 // ── CustomKeypadView region tables ──
 // Region index: 0=up, 1=down, 2=left, 3=right, 4=centre, 5=up-left, 6=up-right,
 // 7=down-left, 8=down-right (mirrors ButtonPosition.KEYPAD_*).
-const KEYPAD_DEFAULT_TEXTS = ["上", "下", "左", "右", "中", "左上", "右上", "左下", "右下"];
+const KEYPAD_DEFAULT_TEXTS = ["Up", "Down", "Left", "Right", "Center", "Up-left", "Up-right", "Down-left", "Down-right"];
 // 8-direction mode: 3×3 grid cell (row*3+col) → region; -1 = centre cell.
 const KEYPAD_GRID_REGION = [[5, 0, 6], [2, -1, 3], [7, 1, 8]];
 // region index → grid cell index.
@@ -305,7 +305,7 @@ export class GamepadLayout {
     this.preset = preset || { buttons: [] };
     // Mirrors GamepadLayout.loadPreset: every layout always carries a settings
     // button, appended when the preset (e.g. a freshly created one) lacks it.
-    // Drop legacy mouse controls (mousepad / 鼠标 buttons) left over from
+    // Drop legacy mouse controls (mousepad / Mouse buttons) left over from
     // presets saved before mouse mapping was removed.
     const raw = (this.preset.buttons || [])
       .filter((b) => baseId(b.id) !== "mousepad" && !baseId(b.id).startsWith("btnMouse"))
@@ -355,7 +355,7 @@ export class GamepadLayout {
         if (b.swipeTrigger) o.swipeTrigger = true;
         if (b.isCustom) {
           o.isCustom = true;
-          o.customText = b.customText || "自定义";
+          o.customText = b.customText || "Custom";
           o.customBits = b.customBits || [];
         }
         if (b.roundShape) o.roundShape = true;
@@ -542,8 +542,8 @@ export class GamepadLayout {
     ctx.restore();
   }
 
-  // 控件描边粗细以「实际屏幕像素」为准：canvas 已按 _dpr 缩放，
-  // 因此把像素值换算成当前变换下的用户单位需除以 _dpr。
+  // 控件描边粗细以「实际屏幕像素”为准: canvas 已按 _dpr 缩放，
+  // 因此把像素值换算成当前变换Down的用户单 bits需除以 _dpr。
   _outlineW(px) {
     return px / this._dpr;
   }
@@ -1344,7 +1344,7 @@ export class GamepadLayout {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = `500 14px ${UI_FONT}`;
-      ctx.fillText("上", 0, 0);
+      ctx.fillText("Up", 0, 0);
       ctx.restore();
     }
     ctx.restore();
@@ -1356,7 +1356,7 @@ export class GamepadLayout {
     return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
   }
 
-  // Extended-range rectangle used by the touchpad when 扩展触摸范围 is on:
+  // Extended-range rectangle used by the touchpad when Extend touch area is on:
   // the touchpad accepts touches across the whole area (not just its own box).
   _hitRectFor(b, includeExtension = true) {
     if (includeExtension && b.isTouchpad && b.followAreaEnabled && b.followAreaW > 0 && b.followAreaH > 0) {
@@ -1368,7 +1368,7 @@ export class GamepadLayout {
   // Follow-area trigger: a joystick / integrated D-pad / custom keypad whose
   // extended rectangle contains the point follows the finger (its centre jumps
   // to the touch). Blocked when another control occupies the point, unless
-  // 触发矩形区域重叠触发 is enabled.
+  // Activate overlapping rectangular areas is enabled.
   _hitFollowArea(px, py) {
     for (const b of this.buttons) {
       if (!b.visible || !(b.isJoystick || b.isDpadPad || b.isKeypad) || !b.followAreaEnabled) continue;
@@ -1438,7 +1438,7 @@ export class GamepadLayout {
       return;
     }
 
-    // Follow-area trigger (joystick / dpadPad 矩形区域内跟随) takes priority.
+    // Follow-area trigger (joystick / dpadPad Follow within rectangular area) takes priority.
     const followB = this._hitFollowArea(px, py);
     if (followB) {
       try { this.canvas.setPointerCapture(e.pointerId); } catch {}
@@ -1475,7 +1475,7 @@ export class GamepadLayout {
       return;
     }
     if (b.isTouchpad) {
-      // 双击按下: a second tap within 300ms / 32px emits TOUCHPAD_CLICK while held.
+      // Double-tap press: a second tap within 300ms / 32px emits TOUCHPAD_CLICK while held.
       const otherTouchpadPointers = [...this._pointers.values()].filter(
         (p) => p.kind === "touchpad" && p.b === b
       ).length;
@@ -1687,7 +1687,7 @@ export class GamepadLayout {
     };
     this._pointers.set(e.pointerId, info);
     if (b.touchpadMode) {
-      // 触摸板模式：DOWN 只记录起点，摇杆保持回中，等 MOVE 产生速度后再偏移。
+      // Touchpad mode: DOWN 只记录起点，Stick保持回Center，等 MOVE 产生速度后再偏移。
       info.vel = { lx: px, ly: py, lt: 0, vx: 0, vy: 0, interval: 0, timer: 0 };
       const r = this.gridRect(b);
       info.b._followDx = follow ? px - (r.x + r.w / 2) : 0;
@@ -1746,21 +1746,21 @@ export class GamepadLayout {
     this.render();
   }
 
-  // 触摸板（速度）模式：把相邻触摸样本算出的瞬时速度映射为摇杆偏移，
-  // 速度归零（看门狗触发）时摇杆回中。镜像 JoystickView.sampleTouchVelocity。
+  // Touchpad（速度）模式: 把相邻触摸样本算出的瞬时速度映射为Stick偏移，
+  // 速度归零（看门狗触发）时Stick回Center。镜像 JoystickView.sampleTouchVelocity。
   _updateStickVelocity(info, px, py, e) {
     const vel = info.vel;
     if (!vel) return;
     const now = e && Number.isFinite(e.timeStamp) ? e.timeStamp : performance.now();
     if (vel.lt <= 0) {
-      // 首个 MOVE 只做种子：DOWN→首次 MOVE 的间隔不代表触控采样间隔。
+      // 首个 MOVE 只做种子: DOWN→首次 MOVE 的间隔不代表触控采样间隔。
       vel.lx = px;
       vel.ly = py;
       vel.lt = now;
       return;
     }
     const dt = Math.max(1, now - vel.lt);
-    // 触控采样率识别：夹取后做 EMA 平滑，供归零看门狗自适应。
+    // 触控采样率识别: 夹取后做 EMA 平滑，供归零看门狗自适应。
     const clamped = Math.max(MIN_SAMPLE_INTERVAL_MS, Math.min(50, dt));
     vel.interval = vel.interval <= 0 ? clamped : vel.interval * 0.75 + clamped * 0.25;
     vel.vx = ((px - vel.lx) / dt) * 1000;
@@ -1772,7 +1772,7 @@ export class GamepadLayout {
     this._scheduleVelocityReset(info);
   }
 
-  // JoystickView.applyVelocity：速度矢量 → 归一化幅度 → 死区/反死区/曲线 → 摇杆输出。
+  // JoystickView.applyVelocity: 速度矢量 → 归一化幅度 → 死区/反死区/曲线 → Stick输出。
   _applyStickVelocity(b, vx, vy) {
     const r = this.gridRect(b);
     const baseR = Math.min(r.w, r.h) / 2;
@@ -1798,17 +1798,17 @@ export class GamepadLayout {
     this.render();
   }
 
-  // 死区 → 反死区 → 灵敏度曲线，输入/输出均为归一化量 (0..1)。
+  // 死区 → 反死区 → Sensitivity curve，输入/输出均为归一化量 (0..1)。
   _shapeNormalized(b, normalized) {
     const dz = Math.max(0, Math.min(0.99, (b.deadZone || 0) / 100));
     const afterDeadZone = normalized <= dz ? 0 : (normalized - dz) / (1 - dz);
     const rdz = Math.max(0, Math.min(0.99, (b.reverseDeadZone || 0) / 100));
-    // 死区优先：死区内恒输出 0，反死区只在死区之外抬升下限。
+    // 死区优先: 死区内恒输出 0，反死区只在死区之外抬升Down限。
     const afterReverseDeadZone = afterDeadZone === 0 ? 0 : afterDeadZone * (1 - rdz) + rdz;
     return this._evaluateCurve(b.sensitivityCurve, afterReverseDeadZone);
   }
 
-  // SensitivityCurve.evaluate 的网页兜底：曲线编辑器在网页版未提供，曲线恒为 null，
+  // SensitivityCurve.evaluate 的网页兜底: 曲线Edit器在网页版未提供，曲线恒为 null，
   // 此时为恒等映射；若将来携带曲线则按隐式锚点 (0,0)/(1,1) 做分段线性插值。
   _evaluateCurve(curve, t) {
     const x = Math.max(0, Math.min(1, t));
@@ -1833,7 +1833,7 @@ export class GamepadLayout {
     return 1;
   }
 
-  // 手指停下后不再有 MOVE，按估计的采样间隔触发一次归零，让摇杆回中。
+  // 手指停Down后不再有 MOVE，按估计的采样间隔触发一次归零，让Stick回Center。
   _scheduleVelocityReset(info) {
     const vel = info.vel;
     if (!vel) return;
@@ -1975,7 +1975,7 @@ export class GamepadLayout {
     }
     b._triggerOffset = offset;
 
-    // 快速响应模式: extrapolate the next frame's travel from the drag velocity.
+    // Fast response mode: extrapolate the next frame's travel from the drag velocity.
     let effective = Math.abs(offset);
     if (b.prediction) {
       const now = performance.now();
@@ -2017,7 +2017,7 @@ export class GamepadLayout {
   }
 
   _updateTouchpad(b) {
-    // 扩展触摸范围: with followAreaEnabled the coordinates are normalised over
+    // Extend touch area: with followAreaEnabled the coordinates are normalised over
     // the extended rectangle instead of the touchpad control itself.
     const r =
       b.followAreaEnabled && b.followAreaW > 0 && b.followAreaH > 0

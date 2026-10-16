@@ -67,10 +67,10 @@ class CurveEditorView @JvmOverloads constructor(
         }
 
         val labelY = top + size + labelPaint.textSize * 1.8f
-        canvas.drawText("手指距离 ->", left + size / 2f, labelY, labelPaint)
+        canvas.drawText("Finger distance ->", left + size / 2f, labelY, labelPaint)
         canvas.save()
         canvas.rotate(-90f, left - labelPaint.textSize * 1.2f, top + size / 2f)
-        canvas.drawText("输出距离 ->", left - labelPaint.textSize * 1.2f, top + size / 2f, labelPaint)
+        canvas.drawText("Output distance ->", left - labelPaint.textSize * 1.2f, top + size / 2f, labelPaint)
         canvas.restore()
     }
 

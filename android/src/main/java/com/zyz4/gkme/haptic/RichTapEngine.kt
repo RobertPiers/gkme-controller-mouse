@@ -8,18 +8,18 @@ import kotlin.math.sqrt
  * 逆向自真实引擎 `libaachaptics.so`（"AAC richtap core v1.0.8"）的精确映射，
  * 用于让 `PCM -> HE -> (官方引擎) -> PCM -> LRA` 的往返尽量还原原 PCM。
  *
- * 依据（见 `docs/richtap-hd-vibration.md` 的逆向章节）：
- * - **强度律**：`FUN_00112820`(日志 `COONVERT_HED`) 里
+ * 依据（见 `docs/richtap-hd-vibration.md` 的逆向章节）:
+ * - **强度律**: `FUN_00112820`(日志 `COONVERT_HED`) 里
  *   `amp = I * 1.14^((I-100)/10)`，`I ∈ [0,100]` 为有效强度
  *   （`I = Parameters.Intensity * Curve.Intensity / 100`）。
- *   即曲线强度到驱动幅度是 **次方律（≈平方）**，不是线性。
- *   本机 `Parameters.Intensity=100`，故 `Curve.Intensity=c` 时归一化输出
+ *   即曲线强度到Driver幅度是 **次方律（≈平方）**，不是线性。
+ *   Local `Parameters.Intensity=100`，故 `Curve.Intensity=c` 时归一化输出
  *   `a = c * 1.14^(10(c-1))`。
- * - **频率律**：`_Z21aac_vibra_looper_post` 经 `FUN_00112820` 用一张 201 项 u16 表
+ * - **频率律**: `_Z21aac_vibra_looper_post` 经 `FUN_00112820` 用一张 201 项 u16 表
  *   (`0x1165a4`，索引 = HE 值 + 50) 把 HE Frequency 映射成引擎的载波控制字。早期按
- *   `Hz(HE) = 170 * word(HE) / word(56)` 线性逆推，但**真机加速度计逐点标定**显示两端
+ *   `Hz(HE) = 170 * word(HE) / word(56)` 线性逆推，但**真机加速度计逐点标定**Display两端
  *   偏差很大（HE0 实测 107Hz 而非 87Hz、HE100 实测 280Hz 而非饱和 225Hz），故改为直接
- *   使用实测 [HE_HZ] 表（见下）。
+ *   使用实测 [HE_HZ] 表（见Down）。
  *
  * 纯 JVM，便于单测与离线仿真对拍。
  */
@@ -29,7 +29,7 @@ object RichTapEngine {
     const val HE_AT_RESONANCE = 56
 
     /**
-     * 谐振频率（Hz）= `heToHz([HE_AT_RESONANCE])`（实测标定：HE 56 ≈ 169.1Hz）。
+     * 谐振频率（Hz）= `heToHz([HE_AT_RESONANCE])`（实测标定: HE 56 ≈ 169.1Hz）。
      * 用于幅度-频率补偿的 f0，使补偿在 HE 56 处恰好为 1。
      */
     const val RESONANCE_HZ = 169.1
@@ -37,7 +37,7 @@ object RichTapEngine {
     /**
      * 引擎 HE Frequency(0..100) → **实测机械频率**（Hz），索引即 HE。
      *
-     * **真机加速度计逐点标定**（设备 `manet` / Snapdragon 8 Gen 3）：单条稳态
+     * **真机加速度计逐点标定**（设备 `manet` / Snapdragon 8 Gen 3）: 单条稳态
      * `continuous` 效果 + 加速度计（与 LRA 刚性耦合，fs≈486Hz）测每个 HE 的主频。
      * HE>~82 处基频超过加速度计 Nyquist（≈243Hz），按 `f_true = fs − f_peak` 还原混叠，
      * 并与设备侧麦克风标定交叉验证（HE90≈255、HE95≈270、HE100≈280）。
@@ -89,7 +89,7 @@ object RichTapEngine {
     val MAX_HZ: Double get() = heToHz(100)
 
     /**
-     * 曲线强度 `c`（0..1，相对 `Parameters.Intensity=100`）→ 归一化驱动幅度（0..1）。
+     * 曲线强度 `c`（0..1，相对 `Parameters.Intensity=100`）→ 归一化Driver幅度（0..1）。
      * 对应引擎的 `a = c * 1.14^(10(c-1))`。
      */
     fun curveToAmplitude(c: Double): Double {
@@ -98,8 +98,8 @@ object RichTapEngine {
     }
 
     /**
-     * 期望归一化驱动幅度 `a`（0..1）→ 曲线强度 `c`（0..1），即 [curveToAmplitude] 的逆。
-     * 用二分求解 `c * 1.14^(10(c-1)) = a`（该函数在 [0,1] 上单调）。
+     * 期望归一化Driver幅度 `a`（0..1）→ 曲线强度 `c`（0..1），即 [curveToAmplitude] 的逆。
+     * 用二分求解 `c * 1.14^(10(c-1)) = a`（该函数在 [0,1] Up单调）。
      */
     fun amplitudeToCurve(a: Double): Double {
         if (a <= 0.0) return 0.0
@@ -115,22 +115,22 @@ object RichTapEngine {
 
     // ── 幅度-频率补偿 ──
     //
-    // LRA 是窄带谐振器：同样的驱动强度，**偏离谐振**（HE 56 ≈ 170Hz）时机械位移会显著下降，
-    // 于是同一个振幅数值在不同 HE 频率下实际强弱不一（HE 56 最大，更高/更低都变小）。
-    // 这里用欠阻尼受迫振动的位移响应**取反**做预补偿，把目标幅度折算成“实际位移尽量与频率
-    // 无关”的驱动幅度。补偿后仍在曲线强度上限（1.0）处封顶——谐振点满幅时没有余量，
-    // 因此高幅 + 偏离谐振无法完全拉平（见 docs 的说明）。
+    // LRA 是窄带谐振器: 同样的Driver强度，**偏离谐振**（HE 56 ≈ 170Hz）时机械 bits移会显著Down降，
+    // 于是同一个振幅数值在不同 HE 频率Down实际强弱不一（HE 56 最大，更高/更低都变小）。
+    // 这里用欠阻尼受迫振动的 bits移响应**取反**做预补偿，把目标幅度折算成“实际 bits移尽量与频率
+    // None关”的Driver幅度。补偿后仍在曲线强度Up限（1.0）处封顶——谐振点满幅时没有余量，
+    // 因此高幅 + 偏离谐振None法完全拉平（见 docs 的说明）。
 
     /** 机械品质因数 Q 的默认估计（真机可标定；越大谐振越尖锐、偏离时衰减越快）。 */
     const val MECHANICAL_Q = 10.0
 
-    /** 频率补偿增益上限，避免偏离谐振时把驱动推向失真/不可控区。 */
+    /** 频率补偿增益Up限，避免偏离谐振时把Driver推向失真/不可控区。 */
     const val MAX_FREQ_COMPENSATION = 2.0
 
     /**
-     * LRA 归一化位移响应（相对谐振点）。恒定驱动力下，欠阻尼受迫振动位移
+     * LRA 归一化 bits移响应（相对谐振点）。恒定Driver力Down，欠阻尼受迫振动 bits移
      * `X(r) ∝ 1 / sqrt((1-r²)² + (2ζr)²)`，`r = f/f0`、`2ζ = 1/Q`；归一化到谐振
-     * （`r = 1`）为 **1.0**，其余处 < 1（本机在 HE [HE_AT_RESONANCE] 最大）。
+     * （`r = 1`）为 **1.0**，其余处 < 1（Local在 HE [HE_AT_RESONANCE] 最大）。
      *
      * @param he HE 频率 0-100（经 [heToHz] 换算为 f，f0 = [RESONANCE_HZ]）。
      * @param q  机械品质因数 [MECHANICAL_Q]。
@@ -144,8 +144,8 @@ object RichTapEngine {
     }
 
     /**
-     * 幅度频率补偿增益：`1 / [resonanceResponse]`，谐振处 = 1，偏离谐振 > 1，上限 [maxBoost]。
-     * 用于把目标驱动幅度折算成“实际位移恒定”的驱动幅度。
+     * 幅度频率补偿增益: `1 / [resonanceResponse]`，谐振处 = 1，偏离谐振 > 1，Up限 [maxBoost]。
+     * 用于把目标Driver幅度折算成“实际 bits移恒定”的Driver幅度。
      */
     fun frequencyCompensation(
         he: Int,
@@ -157,8 +157,8 @@ object RichTapEngine {
     }
 
     /**
-     * 对归一化目标幅度（0..1）做频率补偿，返回补偿后的归一化幅度（0..1，曲线强度上限决定封顶）。
-     * 谐振处不变；偏离谐振处按 [frequencyCompensation] 抬升，达到上限后封顶。
+     * 对归一化目标幅度（0..1）做频率补偿，Back补偿后的归一化幅度（0..1，曲线强度Up限决定封顶）。
+     * 谐振处不变；偏离谐振处按 [frequencyCompensation] 抬升，达到Up限后封顶。
      */
     fun compensateNormalized(
         a: Double,

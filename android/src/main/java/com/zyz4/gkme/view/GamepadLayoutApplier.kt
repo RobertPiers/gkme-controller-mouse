@@ -25,7 +25,7 @@ import com.zyz4.gkme.model.GyroOrientation
  */
 class GamepadLayoutApplier {
 
-    /** 上次测量尺寸缓存：尺寸未变且控件未请求重新布局时跳过 measure，减少重复测量。 */
+    /** Up次测量尺寸缓存: 尺寸未变且控件未请求重新Layout时跳过 measure，减少重复测量。 */
     private val lastMeasuredSize = java.util.WeakHashMap<View, Long>()
 
     /**
@@ -110,8 +110,8 @@ class GamepadLayoutApplier {
         val left = (pos.x * cellW).toInt()
         val top = (pos.y * cellH).toInt()
 
-        // 在测量之前先把自适应内边距与文本自适应上限设好，避免测量后 setPadding /
-        // 重设 autosize 触发 requestLayout 导致多一次布局遍历（启动时会翻倍 onLayout 成本）。
+        // 在测量之前先把自适应内边距与文本自适应Up限设好，避免测量后 setPadding /
+        // 重设 autosize 触发 requestLayout 导致多一次Layout遍历（启动时会翻倍 onLayout 成本）。
         if (isAdaptiveContentButton(id, child)) {
             val pad = (minOf(childW, childH) * 0.1f).toInt()
             if (child.paddingLeft != pad || child.paddingTop != pad) {

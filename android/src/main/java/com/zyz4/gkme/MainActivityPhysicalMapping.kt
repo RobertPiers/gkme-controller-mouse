@@ -55,7 +55,7 @@ internal fun MainActivity.resetPhysicalMapping(key: String) {
 
 /**
  * Rebuilds the physical-controller mapping list into [container]: one card per input, each with a
- * volume-key-style output row plus a separate "用于激活陀螺仪" checkbox row. Joysticks and the
+ * volume-key-style output row plus a separate "Activate gyroscope" checkbox row. Joysticks and the
  * touchpad only get the checkbox.
  */
 internal fun MainActivity.populatePhysicalMapping(container: LinearLayout) {
@@ -158,7 +158,7 @@ private fun MainActivity.buildPhysicalMappingRow(
 
     row.addView(
         Button(a, null, 0, R.style.GamepadChip).apply {
-            text = "添加"
+            text = "Add"
             setOnClickListener {
                 a.showOutputValuePicker(outputs) { newBits ->
                     a.updatePhysicalMappingOutputs(input.key, newBits)
@@ -171,7 +171,7 @@ private fun MainActivity.buildPhysicalMappingRow(
 
     row.addView(
         Button(a, null, 0, R.style.GamepadChip).apply {
-            text = "清空"
+            text = "Clear"
             setOnClickListener {
                 a.updatePhysicalMappingOutputs(input.key, emptyList())
                 onChanged()
@@ -182,7 +182,7 @@ private fun MainActivity.buildPhysicalMappingRow(
 
     row.addView(
         Button(a, null, 0, R.style.GamepadChip).apply {
-            text = "重置"
+            text = "Reset"
             setOnClickListener {
                 a.resetPhysicalMapping(input.key)
                 onChanged()
@@ -200,7 +200,7 @@ private fun MainActivity.buildPhysicalGyroCheckbox(
     density: Float,
     onChanged: () -> Unit,
 ): CheckBox = CheckBox(this).apply {
-    text = "用于激活陀螺仪"
+    text = "Activate gyroscope"
     setTextColor(COLOR_TEXT_SECONDARY)
     textSize = 13f
     isChecked = checked
@@ -221,7 +221,7 @@ private fun MainActivity.fillPhysicalMappingChips(
     if (outputs.isEmpty()) {
         container.addView(
             TextView(this).apply {
-                text = "未映射"
+                text = "Unmapped"
                 setTextColor(COLOR_TEXT_SECONDARY)
                 textSize = 12f
             },

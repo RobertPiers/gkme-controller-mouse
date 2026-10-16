@@ -8,25 +8,25 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * 单音音高跟踪器：对语音线圈 PCM 做带通 + **Hilbert 变换**，由解析信号的瞬时相位求
+ * 单音音高跟踪器: 对语音线圈 PCM 做带通 + **Hilbert 变换**，由解析信号的瞬时相 bits求
  * 瞬时频率，得到高分辨率的主导频率（Hz）与归一化幅度。
  *
- * 直接对应 android/haptics-tools `pcm2pwle` 的 `CalculateFreqEnv`：
+ * 直接对应 android/haptics-tools `pcm2pwle` 的 `CalculateFreqEnv`:
  * 1. 带限（本实现用频域矩形窗代替 Butterworth 低通）；
- * 2. Hilbert 解析信号 → 幅度包络 + 瞬时相位；
- * 3. 解卷绕求相位差分 → 瞬时频率；
- * 4. 时间上做指数平滑（对应官方对包络的低通）。
+ * 2. Hilbert 解析信号 → 幅度包络 + 瞬时相 bits；
+ * 3. 解卷绕求相 bits差分 → 瞬时频率；
+ * 4. 时间Up做指数平滑（对应官方对包络的低通）。
  *
  * 纯 JVM 代码，方便单测。
  */
 class PcmPitchTracker {
 
     /**
-     * 一次分析结果：[freqHz] 主导频率，[amp] 归一化幅度 0..1。
+     * 一次分析结果: [freqHz] 主导频率，[amp] 归一化幅度 0..1。
      *
-     * [voiced] 表示带内是否存在明确的主导音调：纯音/窄带为 true；宽带噪声/撞击（无明确
-     * 音高）为 false。unvoiced 时 [freqHz] 置 0，下游据此改用谐振频率驱动（宽带内容在
-     * 窄带 LRA 上本就无法复现音高，用谐振点能给出最大的机械能量，只由包络承载质感）。
+     * [voiced] 表示带内是否存在明确的主导音调: 纯音/窄带为 true；宽带噪声/撞击（None明确
+     * 音高）为 false。unvoiced 时 [freqHz] 置 0，Down游据此改用谐振频率Driver（宽带内容在
+     * 窄带 LRA Up本就None法复现音高，用谐振点能给出最大的机械能量，只由包络承载质感）。
      */
     data class Pitch(val freqHz: Double, val amp: Double, val voiced: Boolean = true)
 
@@ -41,7 +41,7 @@ class PcmPitchTracker {
         const val SMOOTH_FAST = 0.85
         // 触发快速跟随的偏差阈值（Hz）。
         const val FAST_DELTA_HZ = 25.0
-        // 只统计幅度高于峰值该比例的样本，避开相位噪声。
+        // 只统计幅度高于峰值该比例的样本，避开相 bits噪声。
         const val AMP_GATE = 0.3
         // 音调性（带内峰值功率 / 带内总功率）判定门限，带滞回避免在噪声边缘抖动。
         const val TONALITY_ON = 0.25
@@ -85,7 +85,7 @@ class PcmPitchTracker {
     }
 
     /**
-     * 输入一帧交错 S16LE PCM，返回当前平滑后的 [Pitch]；尚未积累够一个窗口时返回 null。
+     * 输入一帧交错 S16LE PCM，Back当前平滑后的 [Pitch]；尚未积累够一个窗口时Back null。
      */
     fun process(pcm: ByteArray, channels: Int, sampleRate: Int): Pitch? {
         configure(sampleRate, channels)
@@ -96,7 +96,7 @@ class PcmPitchTracker {
         val numFrames = pcm.size / bytesPerFrame
         if (numFrames <= 0) return if (hasOutput) current() else null
 
-        // 语音线圈：4 通道时在 ch2/ch3，否则退回 ch0/ch1。手机单马达取主导通道即可。
+        // 语音线圈: 4 通道时在 ch2/ch3，否则退回 ch0/ch1。手机单马达取主导通道即可。
         val chIdx = if (ch >= 4) 2 else 0
 
         for (i in 0 until numFrames) {
@@ -132,7 +132,7 @@ class PcmPitchTracker {
         val binHz = rate.toDouble() / FFT_SIZE
 
         // 音调性 = 带内峰值功率 / 带内总功率。纯音/窄带接近 1；宽带噪声接近 1/带宽。
-        // 必须在下面的解析信号构造（会置零带外 bin）之前统计。
+        // 必须在Down面的解析信号构造（会置零带外 bin）之前统计。
         var bandPower = 0.0
         var bandPeak = 0.0
         for (k in 1 until FFT_SIZE / 2) {
@@ -144,7 +144,7 @@ class PcmPitchTracker {
         }
         val tonality = if (bandPower > 1e-20) bandPeak / bandPower else 0.0
 
-        // 构造解析信号频谱：负频置零、正频加倍；同时做 [F_MIN,F_MAX] 带通。
+        // 构造解析信号频谱: 负频置零、正频加倍；同时做 [F_MIN,F_MAX] 带通。
         for (k in 1 until FFT_SIZE / 2) {
             val f = k * binHz
             if (f >= F_MIN && f <= F_MAX) {
@@ -162,20 +162,20 @@ class PcmPitchTracker {
 
         ifft(re, im)
 
-        // 解析信号：re = 原信号，im = Hilbert 变换
+        // 解析信号: re = 原信号，im = Hilbert 变换
         for (i in 0 until FFT_SIZE) {
             amp[i] = sqrt(re[i] * re[i] + im[i] * im[i])
             phase[i] = atan2(im[i], re[i])
         }
 
-        // 只在窗口中段统计，避开窗边缘的吉布斯振铃
+        // 只在窗口Center段统计，避开窗边缘的吉布斯振铃
         val lo = FFT_SIZE / 4
         val hi = FFT_SIZE * 3 / 4
         var peakAmp = 0.0
         for (i in lo..hi) if (amp[i] > peakAmp) peakAmp = amp[i]
         if (peakAmp <= 1e-6) return
 
-        // 解卷绕相位 -> 瞬时频率（幅度加权平均，避开低幅度相位噪声）
+        // 解卷绕相 bits -> 瞬时频率（幅度加权平均，避开低幅度相 bits噪声）
         val gate = AMP_GATE * peakAmp
         var sumW = 0.0
         var sumWF = 0.0
@@ -197,7 +197,7 @@ class PcmPitchTracker {
         val freq = if (sumW > 0.0) sumWF / sumW else 0.0
         val peakNorm = peakAmp.coerceIn(0.0, 1.0)
 
-        // 音调性滞回：明确有声调 -> voiced；明确宽带噪声 -> unvoiced；中间保持上一判定。
+        // 音调性滞回: 明确有声调 -> voiced；明确宽带噪声 -> unvoiced；Center间保持Up一判定。
         voiced = when {
             tonality >= TONALITY_ON -> true
             tonality <= TONALITY_OFF -> false
@@ -209,13 +209,13 @@ class PcmPitchTracker {
             smoothAmp = peakNorm
             hasOutput = true
         } else {
-            // 非对称平滑：测量值明显偏离当前值时快速跟随（降低音高突变/扫频的滞后），
+            // 非对称平滑: 测量值明显偏离当前值时快速跟随（降低音高突变/扫频的滞后），
             // 稳态小幅抖动仍用慢系数去抖。
             val alpha = if (abs(freq - smoothFreq) > FAST_DELTA_HZ) SMOOTH_FAST else SMOOTH
             smoothFreq += (freq - smoothFreq) * alpha
             smoothAmp += (peakNorm - smoothAmp) * SMOOTH
         }
-        // unvoiced：丢弃音高（下游用谐振驱动），避免宽带内容被映射到无意义的音高。
+        // unvoiced: 丢弃音高（Down游用谐振Driver），避免宽带内容被映射到None意义的音高。
         if (!voiced) smoothFreq = 0.0
     }
 
@@ -264,7 +264,7 @@ class PcmPitchTracker {
         }
     }
 
-    /** 原地逆 FFT（共轭法：ifft(X) = conj(fft(conj(X))) / N）。 */
+    /** 原地逆 FFT（共轭法: ifft(X) = conj(fft(conj(X))) / N）。 */
     private fun ifft(r: DoubleArray, i: DoubleArray) {
         val n = r.size
         for (k in 0 until n) i[k] = -i[k]

@@ -100,7 +100,7 @@ public abstract class AbstractXboxController extends AbstractController {
     private List<UsbInterface> ifaces=new ArrayList<>();
 
     public boolean start() {
-        // 支持同一实例二次 start：复位停止标志与端点，否则会误报 duplicate endpoint。
+        // Supported同一实例二次 start: 复 bitsStop标志与端点，否则会误报 duplicate endpoint。
         stopped = false;
         inEndpt = null;
         outEndpt = null;

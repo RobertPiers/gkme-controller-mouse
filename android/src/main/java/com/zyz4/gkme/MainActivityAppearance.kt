@@ -75,10 +75,10 @@ internal fun MainActivity.savePickedImage(uri: Uri, prefix: String, onSaved: (St
             onSaved(file.absolutePath)
             a.syncAppearanceUI()
             a.updateAppearancePreview()
-            a.showToast("图片已设置")
+            a.showToast("Image set")
         }
     } catch (e: Exception) {
-        a.showToast("图片加载失败: ${e.message}")
+        a.showToast("Failed to load image: ${e.message}")
     }
 }
 
@@ -157,7 +157,7 @@ internal fun MainActivity.setupAppearancePage() {
         object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
                 if (!fromUser) return
-                a.findViewById<TextView>(R.id.tvBtnOutlineWidth).text = "轮廓粗细: $p"
+                a.findViewById<TextView>(R.id.tvBtnOutlineWidth).text = "Outline thickness: $p"
                 a.onAppearanceChange { it.copy(btnOutlineWidth = p) }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -185,7 +185,7 @@ internal fun MainActivity.setupAppearancePage() {
         object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
                 if (!fromUser) return
-                a.findViewById<TextView>(R.id.tvJoyBaseOutlineWidth).text = "底座轮廓粗细: $p"
+                a.findViewById<TextView>(R.id.tvJoyBaseOutlineWidth).text = "Base outline thickness: $p"
                 a.onAppearanceChange { it.copy(joyBaseOutlineWidth = p) }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -213,7 +213,7 @@ internal fun MainActivity.setupAppearancePage() {
         object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
                 if (!fromUser) return
-                a.findViewById<TextView>(R.id.tvJoyCapOutlineWidth).text = "摇杆帽轮廓粗细: $p"
+                a.findViewById<TextView>(R.id.tvJoyCapOutlineWidth).text = "Stick cap outline thickness: $p"
                 a.onAppearanceChange { it.copy(joyCapOutlineWidth = p) }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -229,7 +229,7 @@ internal fun MainActivity.setupAppearancePage() {
         object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
                 if (!fromUser) return
-                a.findViewById<TextView>(R.id.tvJoyTriggerOutlineWidth).text = "触发区域粗细: $p"
+                a.findViewById<TextView>(R.id.tvJoyTriggerOutlineWidth).text = "Trigger area thickness: $p"
                 a.onAppearanceChange { it.copy(joyTriggerOutlineWidth = p) }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -257,7 +257,7 @@ internal fun MainActivity.setupAppearancePage() {
         object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
                 if (!fromUser) return
-                a.findViewById<TextView>(R.id.tvTpOutlineWidth).text = "触摸板轮廓粗细: $p"
+                a.findViewById<TextView>(R.id.tvTpOutlineWidth).text = "Touchpad outline thickness: $p"
                 a.onAppearanceChange { it.copy(tpOutlineWidth = p) }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -273,7 +273,7 @@ internal fun MainActivity.setupAppearancePage() {
         object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
                 if (!fromUser) return
-                a.findViewById<TextView>(R.id.tvTpTriggerOutlineWidth).text = "区域粗细: $p"
+                a.findViewById<TextView>(R.id.tvTpTriggerOutlineWidth).text = "Area thickness: $p"
                 a.onAppearanceChange { it.copy(tpTriggerOutlineWidth = p) }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -281,7 +281,7 @@ internal fun MainActivity.setupAppearancePage() {
         }
     )
 
-    // ── 一体十字键/自定义按键盘 ──
+    // ── D-pad / custom keypad ──
     a.findViewById<Button>(R.id.btnPadFillSolid).setOnClickListener {
         a.onAppearanceChange { it.copy(dpadPadFillType = FillType.SOLID_COLOR) }
     }
@@ -301,7 +301,7 @@ internal fun MainActivity.setupAppearancePage() {
         object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
                 if (!fromUser) return
-                a.findViewById<TextView>(R.id.tvPadBorderWidth).text = "控件轮廓粗细: $p"
+                a.findViewById<TextView>(R.id.tvPadBorderWidth).text = "Control outline thickness: $p"
                 a.onAppearanceChange { it.copy(dpadPadOutlineWidth = p) }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -309,7 +309,7 @@ internal fun MainActivity.setupAppearancePage() {
         }
     )
 
-    // ── 触发区域（一体十字键/自定义按键盘） ──
+    // ── 触发区域（D-pad / custom keypad） ──
     a.findViewById<Button>(R.id.btnPadTriggerOutlineColor).setOnClickListener {
         a.showAppearanceColorPicker("dpadPadTriggerOutlineColor", a.viewModel.settings.value.dpadPadTriggerOutlineColor)
     }
@@ -317,7 +317,7 @@ internal fun MainActivity.setupAppearancePage() {
         object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
                 if (!fromUser) return
-                a.findViewById<TextView>(R.id.tvPadTriggerOutlineWidth).text = "触发区域轮廓粗细: $p"
+                a.findViewById<TextView>(R.id.tvPadTriggerOutlineWidth).text = "Trigger area outline thickness: $p"
                 a.onAppearanceChange { it.copy(dpadPadTriggerOutlineWidth = p) }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -347,7 +347,7 @@ internal fun MainActivity.setupAppearancePage() {
         object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
                 if (!fromUser) return
-                a.findViewById<TextView>(R.id.tvLinearTriggerBoxOutlineWidth).text = "线框粗细: $p"
+                a.findViewById<TextView>(R.id.tvLinearTriggerBoxOutlineWidth).text = "Wireframe thickness: $p"
                 a.onAppearanceChange { it.copy(linearTriggerBoxOutlineWidth = p) }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -517,7 +517,7 @@ internal fun MainActivity.showColorPickerDialog(
     // ── "Use controller LED color" checkbox (above the buttons) ──
     val ledCheck: android.widget.CheckBox? = ledColor?.let { led ->
         android.widget.CheckBox(a).apply {
-            text = "使用控制LED颜色"
+            text = "Use controller LED color"
             setTextColor(-0x1)
             textSize = 14f
             isChecked = ledBound
@@ -529,9 +529,9 @@ internal fun MainActivity.showColorPickerDialog(
     }
 
     CustomDialog.showCustomView(
-        a, "选择颜色", root,
-        negativeText = "取消",
-        positiveText = "确认",
+        a, "Choose color", root,
+        negativeText = "Cancel",
+        positiveText = "Confirm",
         onPositive = { onColorSelected(picker.color, ledCheck?.isChecked == true) },
         scrollable = true,
     )
@@ -539,7 +539,7 @@ internal fun MainActivity.showColorPickerDialog(
 
 /**
  * Color picker for an appearance color field. Besides picking a manual color, the user
- * can tick "使用手柄LED颜色" to bind the field to the live controller LED color; bound
+ * can tick "Use controller LED color" to bind the field to the live controller LED color; bound
  * fields update in real time and are clamped to a minimum brightness of #1A1A1A.
  * Unticking the box and confirming removes the binding.
  */
@@ -563,14 +563,14 @@ private fun colorBg(c: Int) = android.graphics.drawable.GradientDrawable().apply
 }
 
 /** Renders an appearance color preview. When the field follows the controller LED the
- *  color square is replaced by a "控制器LED" label. */
+ *  color square is replaced by a "Controller LED" label. */
 internal fun MainActivity.syncColorPreview(buttonId: Int, field: String, color: Int) {
     val btn = findViewById<Button>(buttonId) ?: return
     val density = resources.displayMetrics.density
     val bound = viewModel.settings.value.ledBoundColors.contains(field)
     val lp = btn.layoutParams
     if (bound) {
-        btn.text = "控制器LED"
+        btn.text = "Controller LED"
         btn.textSize = 11f
         btn.setTextColor(0xFFFFFFFF.toInt())
         btn.isAllCaps = false
@@ -592,7 +592,7 @@ internal fun MainActivity.syncColorPreview(buttonId: Int, field: String, color: 
 }
 
 internal fun iconMaxSizeLabel(value: Int): String =
-    if (value >= 100) "最大图标大小: 无限" else "最大图标大小: ${value.coerceAtLeast(0)}sp"
+    if (value >= 100) "Maximum icon size: Unlimited" else "Maximum icon size: ${value.coerceAtLeast(0)}sp"
 
 // ── Sync Appearance UI ──
 
@@ -618,7 +618,7 @@ internal fun MainActivity.syncAppearanceUI() {
     a.findViewById<View>(R.id.btnBtnPickImage).visibility = if (s.btnFillType == FillType.IMAGE) View.VISIBLE else View.GONE
     a.syncColorPreview(R.id.btnBtnOutlineColor, "btnOutlineColor", s.btnOutlineColor)
     a.findViewById<SeekBar>(R.id.seekBtnOutlineWidth).progress = s.btnOutlineWidth
-    a.findViewById<TextView>(R.id.tvBtnOutlineWidth).text = "轮廓粗细: ${s.btnOutlineWidth}"
+    a.findViewById<TextView>(R.id.tvBtnOutlineWidth).text = "Outline thickness: ${s.btnOutlineWidth}"
     a.syncColorPreview(R.id.btnBtnIconColor, "btnIconColor", s.btnIconColor)
 
     // Joystick Base
@@ -628,7 +628,7 @@ internal fun MainActivity.syncAppearanceUI() {
     a.findViewById<View>(R.id.btnJoyBasePickImage).visibility = if (s.joyBaseFillType == FillType.IMAGE) View.VISIBLE else View.GONE
     a.syncColorPreview(R.id.btnJoyBaseOutlineColor, "joyBaseOutlineColor", s.joyBaseOutlineColor)
     a.findViewById<SeekBar>(R.id.seekJoyBaseOutlineWidth).progress = s.joyBaseOutlineWidth
-    a.findViewById<TextView>(R.id.tvJoyBaseOutlineWidth).text = "底座轮廓粗细: ${s.joyBaseOutlineWidth}"
+    a.findViewById<TextView>(R.id.tvJoyBaseOutlineWidth).text = "Base outline thickness: ${s.joyBaseOutlineWidth}"
 
     // Joystick Cap
     a.selectChipGroup(listOf(R.id.btnJoyCapFillSolid, R.id.btnJoyCapFillImage), s.joyCapFillType.ordinal)
@@ -637,18 +637,18 @@ internal fun MainActivity.syncAppearanceUI() {
     a.findViewById<View>(R.id.btnJoyCapPickImage).visibility = if (s.joyCapFillType == FillType.IMAGE) View.VISIBLE else View.GONE
     a.syncColorPreview(R.id.btnJoyCapOutlineColor, "joyCapOutlineColor", s.joyCapOutlineColor)
     a.findViewById<SeekBar>(R.id.seekJoyCapOutlineWidth).progress = s.joyCapOutlineWidth
-    a.findViewById<TextView>(R.id.tvJoyCapOutlineWidth).text = "摇杆帽轮廓粗细: ${s.joyCapOutlineWidth}"
+    a.findViewById<TextView>(R.id.tvJoyCapOutlineWidth).text = "Stick cap outline thickness: ${s.joyCapOutlineWidth}"
     a.syncColorPreview(R.id.btnJoyIconColor, "joyIconColor", s.joyIconColor)
 
     // Trigger Area
     a.syncColorPreview(R.id.btnJoyTriggerOutlineColor, "joyTriggerOutlineColor", s.joyTriggerOutlineColor)
     a.findViewById<SeekBar>(R.id.seekJoyTriggerOutlineWidth).progress = s.joyTriggerOutlineWidth
-    a.findViewById<TextView>(R.id.tvJoyTriggerOutlineWidth).text = "触发区域粗细: ${s.joyTriggerOutlineWidth}"
+    a.findViewById<TextView>(R.id.tvJoyTriggerOutlineWidth).text = "Trigger area thickness: ${s.joyTriggerOutlineWidth}"
 
     // Linear Trigger Box
     a.syncColorPreview(R.id.btnLinearTriggerBoxOutlineColor, "linearTriggerBoxOutlineColor", s.linearTriggerBoxOutlineColor)
     a.findViewById<SeekBar>(R.id.seekLinearTriggerBoxOutlineWidth).progress = s.linearTriggerBoxOutlineWidth
-    a.findViewById<TextView>(R.id.tvLinearTriggerBoxOutlineWidth).text = "线框粗细: ${s.linearTriggerBoxOutlineWidth}"
+    a.findViewById<TextView>(R.id.tvLinearTriggerBoxOutlineWidth).text = "Wireframe thickness: ${s.linearTriggerBoxOutlineWidth}"
 
     // Touchpad
     a.selectChipGroup(listOf(R.id.btnTpFillSolid, R.id.btnTpFillImage), s.tpFillType.ordinal)
@@ -657,15 +657,15 @@ internal fun MainActivity.syncAppearanceUI() {
     a.findViewById<View>(R.id.btnTpPickImage).visibility = if (s.tpFillType == FillType.IMAGE) View.VISIBLE else View.GONE
     a.syncColorPreview(R.id.btnTpOutlineColor, "tpOutlineColor", s.tpOutlineColor)
     a.findViewById<SeekBar>(R.id.seekTpOutlineWidth).progress = s.tpOutlineWidth
-    a.findViewById<TextView>(R.id.tvTpOutlineWidth).text = "触摸板轮廓粗细: ${s.tpOutlineWidth}"
+    a.findViewById<TextView>(R.id.tvTpOutlineWidth).text = "Touchpad outline thickness: ${s.tpOutlineWidth}"
     a.syncColorPreview(R.id.btnTpIconColor, "tpIconColor", s.tpIconColor)
 
     // Touchpad Extended Range
     a.syncColorPreview(R.id.btnTpTriggerOutlineColor, "tpTriggerOutlineColor", s.tpTriggerOutlineColor)
     a.findViewById<SeekBar>(R.id.seekTpTriggerOutlineWidth).progress = s.tpTriggerOutlineWidth
-    a.findViewById<TextView>(R.id.tvTpTriggerOutlineWidth).text = "区域粗细: ${s.tpTriggerOutlineWidth}"
+    a.findViewById<TextView>(R.id.tvTpTriggerOutlineWidth).text = "Area thickness: ${s.tpTriggerOutlineWidth}"
 
-    // 一体十字键/自定义按键盘
+    // D-pad / custom keypad
     val dpadPadAppearance = s
     a.selectChipGroup(listOf(R.id.btnPadFillSolid, R.id.btnPadFillImage), dpadPadAppearance.dpadPadFillType.ordinal)
     a.syncColorPreview(R.id.btnPadColor, "dpadPadColor", dpadPadAppearance.dpadPadColor)
@@ -673,13 +673,13 @@ internal fun MainActivity.syncAppearanceUI() {
     a.findViewById<View>(R.id.btnPadPickImage).visibility = if (dpadPadAppearance.dpadPadFillType == FillType.IMAGE) View.VISIBLE else View.GONE
     a.syncColorPreview(R.id.btnPadBorderColor, "dpadPadOutlineColor", dpadPadAppearance.dpadPadOutlineColor)
     a.findViewById<SeekBar>(R.id.seekPadBorderWidth).progress = dpadPadAppearance.dpadPadOutlineWidth
-    a.findViewById<TextView>(R.id.tvPadBorderWidth).text = "控件轮廓粗细: ${dpadPadAppearance.dpadPadOutlineWidth}"
+    a.findViewById<TextView>(R.id.tvPadBorderWidth).text = "Control outline thickness: ${dpadPadAppearance.dpadPadOutlineWidth}"
     a.syncColorPreview(R.id.btnDpadPadIconColor, "dpadPadIconColor", dpadPadAppearance.dpadPadIconColor)
 
-    // 触发区域（一体十字键/自定义按键盘）
+    // 触发区域（D-pad / custom keypad）
     a.syncColorPreview(R.id.btnPadTriggerOutlineColor, "dpadPadTriggerOutlineColor", dpadPadAppearance.dpadPadTriggerOutlineColor)
     a.findViewById<SeekBar>(R.id.seekPadTriggerOutlineWidth).progress = dpadPadAppearance.dpadPadTriggerOutlineWidth
-    a.findViewById<TextView>(R.id.tvPadTriggerOutlineWidth).text = "触发区域轮廓粗细: ${dpadPadAppearance.dpadPadTriggerOutlineWidth}"
+    a.findViewById<TextView>(R.id.tvPadTriggerOutlineWidth).text = "Trigger area outline thickness: ${dpadPadAppearance.dpadPadTriggerOutlineWidth}"
 
     if (a.currentSettingsCategory == 2) a.updateAppearancePreview()
 }
@@ -758,7 +758,7 @@ internal fun MainActivity.showPreviewZoom() {
     if (overlay != null) {
         overlay.visibility = View.VISIBLE
         a.updateAppearancePreview()
-        CustomDialog.showToast(a, "点击任意处退出")
+        CustomDialog.showToast(a, "Tap anywhere to exit")
     }
 }
 
@@ -813,9 +813,9 @@ internal fun MainActivity.exportAppearanceToUri(uri: Uri) {
         }
         tempZip.delete()
 
-        a.showToast("外观设置导出成功")
+        a.showToast("Appearance settings exported")
     } catch (e: Exception) {
-        a.showToast("导出失败: ${e.message}")
+        a.showToast("Export failed: ${e.message}")
     }
 }
 
@@ -845,7 +845,7 @@ internal fun MainActivity.importAppearanceFromUri(uri: Uri) {
         }
 
         if (jsonText == null) {
-            a.showToast("无法读取外观配置文件")
+            a.showToast("Cannot read appearance configuration")
             return
         }
 
@@ -925,8 +925,8 @@ internal fun MainActivity.importAppearanceFromUri(uri: Uri) {
         a.applyAppearanceIfChanged(newSettings)
         a.syncAppearanceUI()
         a.updateAppearancePreview()
-        a.showToast("外观设置导入成功")
+        a.showToast("Appearance settings imported")
     } catch (e: Exception) {
-        a.showToast("导入失败: ${e.message}")
+        a.showToast("Import failed: ${e.message}")
     }
 }

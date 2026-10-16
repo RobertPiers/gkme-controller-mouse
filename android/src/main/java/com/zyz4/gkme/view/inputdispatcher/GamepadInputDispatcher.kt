@@ -227,9 +227,9 @@ override fun dispatchEdit(
 
         // 1) Try to select the currently selected button (it may have been moved externally)
         val allHitIds = hitResolver.resolve(x, y, buttons, bounds)
-        
+
         var hitId: String? = null
-        
+
         if (selectedButtonId != null && selectedButtonId in allHitIds) {
             // Selected button is under finger — drag it
             hitId = selectedButtonId
@@ -244,11 +244,11 @@ override fun dispatchEdit(
             // No relevant selection — pick topmost hit button
             hitId = allHitIds.firstOrNull()
         }
-        
+
         if (hitId != null) {
             val rect = bounds[hitId]
             val pos = buttons.find { it.id == hitId }
-            
+
             if (rect != null && pos != null) {
                 // Normal case: button has valid bounds
                 commands += MoveButton(hitId, pos.x, pos.y)
@@ -271,7 +271,7 @@ override fun dispatchEdit(
                 val gridRight = (pos.x + pos.width) * cellW
                 val gridBottom = (pos.y + pos.height) * cellH
                 val fakeRect = android.graphics.Rect(gridLeft.toInt(), gridTop.toInt(), gridRight.toInt(), gridBottom.toInt())
-                
+
                 commands += MoveButton(hitId, pos.x, pos.y)
                 // At this point hitId == selectedButtonId is always true (guaranteed by outer condition)
                 // Selected button has no pixel bounds — use grid-based rect for drag offset

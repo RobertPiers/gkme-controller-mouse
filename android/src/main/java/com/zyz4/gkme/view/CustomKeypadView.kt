@@ -58,7 +58,7 @@ class CustomKeypadView @JvmOverloads constructor(
     var padBorderColor: Int = 0xFF666666.toInt()
     var padBorderWidth: Float = 4f
 
-    /** 按键盘文本颜色。 */
+    /** 按Keyboard文本颜色。 */
     var appearanceTextColor: Int = 0xFFCCCCCC.toInt()
     var idleOpacity: Int = 100
     var activeOpacity: Int = 100
@@ -69,7 +69,7 @@ class CustomKeypadView @JvmOverloads constructor(
             invalidate()
         }
 
-    /** true = 8 方向模式（上/下/左/右/左上/右上/左下/右下），false = 4 方向模式。 */
+    /** true = 8 Direction mode（Up/Down/Left/Right/Up-left/Up-right/Down-left/Down-right），false = 4 Direction mode。 */
     var eightWay: Boolean = false
         set(value) {
             if (field != value) {
@@ -80,7 +80,7 @@ class CustomKeypadView @JvmOverloads constructor(
             }
         }
 
-    /** 中心形状。CIRCLE 时中心为内切圆，周围方向区域改为径向扇环（绘制与判定一致）。 */
+    /** Center shape。CIRCLE 时Center心为内切圆，周围方向区域改为径向扇环（绘制与判定一致）。 */
     var centerShape: CenterShape = CenterShape.SQUARE
         set(value) {
             if (field != value) {
@@ -91,7 +91,7 @@ class CustomKeypadView @JvmOverloads constructor(
             }
         }
 
-    /** 全局“最大图标大小”限制（px）；null = 不限制。字号不会超过该值。 */
+    /** 全局“最大图标Size”限制（px）；null = 不限制。字号不会超过该值。 */
     var textMaxSizePx: Float? = null
         set(value) {
             if (field != value) {
@@ -124,18 +124,18 @@ class CustomKeypadView @JvmOverloads constructor(
     private val centerRect = Path()
     private val sepPaint = Paint(borderPaint).apply { style = Paint.Style.STROKE }
     private val wedgePaths = arrayOf(Path(), Path(), Path(), Path())
-    // 圆形模式：中心圆、外围环、以及按区域索引存放的扇环路径（4 方向用索引 0..3，8 方向用 0..8）。
+    // Circle模式: Center心圆、外围环、以及按区域索引存放的扇环路径（4 方向用索引 0..3，8 方向用 0..8）。
     private val centerCirclePath = Path()
     private val circleRingPath = Path()
     private val sectorPaths = Array(9) { Path() }
     private var centerRadius = 0f
 
-    /** 圆形模式扇区序号（0=右，顺时针）→ 区域索引。 */
+    /** Circle模式扇区序号（0=Right，Clockwise）→ 区域索引。 */
     private val circleSectorRegionEight = intArrayOf(3, 8, 1, 7, 2, 5, 0, 6)
     private val circleSectorRegionFour = intArrayOf(3, 1, 2, 0)
-    // 8 方向模式：3×3 网格中每个格的路径，索引 = row*3 + col（与一体十字键的划分一致）。
+    // 8 Direction mode: 3×3 网格Center每个格的路径，索引 = row*3 + col（与D-pad的划分一致）。
     private val eightCellPaths = Array(9) { Path() }
-    // (row, col) → 区域索引；-1 表示中心（不参与方向触发，走双击逻辑）。
+    // (row, col) → 区域索引；-1 表示Center心（不参与方向触发，走双击逻辑）。
     private val gridRegionTable = arrayOf(
         intArrayOf(5, 0, 6),
         intArrayOf(2, -1, 3),
@@ -243,7 +243,7 @@ class CustomKeypadView @JvmOverloads constructor(
         wedgePaths[3].lineTo(cx + c, cy + c)
         wedgePaths[3].close()
 
-        // 8 方向：按一体十字键的 3×3 网格划分，每个方向对应一个 1/3 格。
+        // 8 方向: 按D-pad的 3×3 网格划分，每个方向对应一个 1/3 格。
         val a = third
         for (row in 0..2) {
             for (col in 0..2) {
@@ -257,8 +257,8 @@ class CustomKeypadView @JvmOverloads constructor(
             }
         }
 
-        // ── 圆形模式：中心圆 + 径向扇环 ──
-        // 中心圆半径取现有方形中心的内切圆：8 方向 = 中心格内切（third/2），4 方向 = 中心方块内切（half）。
+        // ── Circle模式: Center心圆 + 径向扇环 ──
+        // Center心圆半径取现有SquareCenter心的内切圆: 8 方向 = Center心格内切（third/2），4 方向 = Center心方块内切（half）。
         val cr = if (eightWay) third / 2f else half
         centerRadius = cr
 
@@ -278,8 +278,8 @@ class CustomKeypadView @JvmOverloads constructor(
 
         for (path in sectorPaths) path.reset()
         if (eightWay) {
-            // 区域索引 → 扇环：0=上(270°), 1=下(90°), 2=左(180°), 3=右(0°),
-            // 5=左上(225°), 6=右上(315°), 7=左下(135°), 8=右下(45°)。每扇 45°。
+            // 区域索引 → 扇环: 0=Up(270°), 1=Down(90°), 2=Left(180°), 3=Right(0°),
+            // 5=Up-left(225°), 6=Up-right(315°), 7=Down-left(135°), 8=Down-right(45°)。每扇 45°。
             buildSector(sectorPaths[0], outerRect, innerRect, 247.5f, 45f)
             buildSector(sectorPaths[1], outerRect, innerRect, 67.5f, 45f)
             buildSector(sectorPaths[2], outerRect, innerRect, 157.5f, 45f)
@@ -289,7 +289,7 @@ class CustomKeypadView @JvmOverloads constructor(
             buildSector(sectorPaths[7], outerRect, innerRect, 112.5f, 45f)
             buildSector(sectorPaths[8], outerRect, innerRect, 22.5f, 45f)
         } else {
-            // 4 方向：每扇 90°，分隔线在四个对角方向。
+            // 4 方向: 每扇 90°，分隔线在四个对角方向。
             buildSector(sectorPaths[0], outerRect, innerRect, 225f, 90f)
             buildSector(sectorPaths[1], outerRect, innerRect, 45f, 90f)
             buildSector(sectorPaths[2], outerRect, innerRect, 135f, 90f)
@@ -297,7 +297,7 @@ class CustomKeypadView @JvmOverloads constructor(
         }
     }
 
-    /** 构造一个扇环路径（中心圆到外圆之间的一段环形区域）。角度使用 Android 画布约定：0° 在右，顺时针为正。 */
+    /** 构造一个扇环路径（Center心圆到外圆之间的一段环形区域）。角度使用 Android 画布约定: 0° 在Right，Clockwise为正。 */
     private fun buildSector(path: Path, outer: RectF, inner: RectF, startDeg: Float, sweepDeg: Float) {
         path.reset()
         path.arcTo(outer, startDeg, sweepDeg, true)
@@ -338,7 +338,7 @@ class CustomKeypadView @JvmOverloads constructor(
         canvas.clipPath(circlePath)
 
         if (centerShape == CenterShape.CIRCLE) {
-            // 圆形中心：整圆填充 + 方向扇环高亮 + 中心圆高亮。
+            // CircleCenter心: 整圆填充 + 方向扇环高亮 + Center心圆高亮。
             fillPaint.shader = null
             fillPaint.color = padColor
             canvas.drawPath(circlePath, fillPaint)
@@ -351,7 +351,7 @@ class CustomKeypadView @JvmOverloads constructor(
                 canvas.drawPath(centerCirclePath, fillPaint)
             }
         } else if (eightWay) {
-            // 一体十字键图案：整圆填充 + 3×3 网格区域高亮。
+            // D-pad图案: 整圆填充 + 3×3 网格区域高亮。
             fillPaint.shader = null
             fillPaint.color = padColor
             canvas.drawPath(circlePath, fillPaint)
@@ -394,7 +394,7 @@ class CustomKeypadView @JvmOverloads constructor(
             sepPaint.shader = null
             canvas.drawPath(circlePath, sepPaint)
             if (centerShape == CenterShape.CIRCLE) {
-                // 中心圆 + 扇区分隔线（中心圆边缘 → 外圆）。
+                // Center心圆 + 扇区分隔线（Center心圆边缘 → 外圆）。
                 canvas.drawCircle(centerX, centerY, centerRadius, sepPaint)
                 val step = if (eightWay) 45f else 90f
                 var deg = if (eightWay) 22.5f else 45f
@@ -410,7 +410,7 @@ class CustomKeypadView @JvmOverloads constructor(
                     deg += step
                 }
             } else if (eightWay) {
-                // 3×3 网格分隔线，裁剪到圆内，形成一体十字键的十字图案。
+                // 3×3 网格分隔线，裁剪到圆内，形成D-pad的十字图案。
                 val a = third
                 canvas.save()
                 canvas.clipPath(circlePath)
@@ -427,7 +427,7 @@ class CustomKeypadView @JvmOverloads constructor(
 
         val textAt: (Int) -> String = { keypadTexts.getOrElse(it) { "" } }
         if (centerShape == CenterShape.CIRCLE) {
-            // 圆形模式：每个方向文本放在对应扇环的中间半径处。
+            // Circle模式: 每个方向文本放在对应扇环的Center间半径处。
             val midR = centerRadius + (radius - centerRadius) * 0.62f
             val box = (radius - centerRadius) * 0.9f
             fun place(region: Int, deg: Float) {
@@ -449,13 +449,13 @@ class CustomKeypadView @JvmOverloads constructor(
             val a = third
             val x1 = centerX
             val y1 = centerY
-            // 边缘/中心格：接近完整的 1/3 格。
+            // 边缘/Center心格: 接近完整的 1/3 格。
             drawRegionText(canvas, textAt(0), x1, originY + a / 2f, a, a)
             drawRegionText(canvas, textAt(1), x1, originY + 2.5f * a, a, a)
             drawRegionText(canvas, textAt(2), originX + a / 2f, y1, a, a)
             drawRegionText(canvas, textAt(3), originX + 2.5f * a, y1, a, a)
             drawRegionText(canvas, textAt(ButtonPosition.KEYPAD_CENTER_INDEX), x1, y1, a, a)
-            // 四角格被圆裁剪，可用框更小；文本中心取可见区域形心。
+            // 四角格被圆裁剪，可用框更小；文本Center心取可见区域形心。
             val cornerBox = radius * 0.50f
             val cOff = radius * 0.57f
             drawRegionText(canvas, textAt(5), x1 - cOff, y1 - cOff, cornerBox, cornerBox)
@@ -463,7 +463,7 @@ class CustomKeypadView @JvmOverloads constructor(
             drawRegionText(canvas, textAt(7), x1 - cOff, y1 + cOff, cornerBox, cornerBox)
             drawRegionText(canvas, textAt(8), x1 + cOff, y1 + cOff, cornerBox, cornerBox)
         } else {
-            // 四方向为 90° 扇形，可用框取接近正方形的 2/3 半径；中心为内部方块。
+            // 四方向为 90° 扇形，可用框取接近正Square的 2/3 半径；Center心为内部方块。
             val box = radius * 0.667f
             drawRegionText(canvas, textAt(0), centerX, centerY - radius * 0.58f, box, box)
             drawRegionText(canvas, textAt(1), centerX, centerY + radius * 0.58f, box, box)
@@ -482,7 +482,7 @@ class CustomKeypadView @JvmOverloads constructor(
         canvas.drawText(text, cx, baseline, paint)
     }
 
-    /** 文本宽度不超过区域的 80%、高度不超过 90%，并应用全局“最大图标大小”上限。 */
+    /** 文本Width不超过区域的 80%、Height不超过 90%，并应用全局“最大图标Size”Up限。 */
     private fun fittedTextSize(text: String, boxW: Float, boxH: Float): Float {
         if (text.isEmpty()) return 0f
         val ref = 100f
@@ -500,7 +500,7 @@ class CustomKeypadView @JvmOverloads constructor(
         drawCenteredText(canvas, textPaint, text, cx, cy)
     }
 
-    /** 应用全局“最大图标大小”上限。 */
+    /** 应用全局“最大图标Size”Up限。 */
     private fun capTextSize(size: Float): Float =
         textMaxSizePx?.let { Math.min(size, it) } ?: size
 
@@ -513,7 +513,7 @@ class CustomKeypadView @JvmOverloads constructor(
         return classify(dx, dy)
     }
 
-    /** 圆形模式：中心圆内返回 -1（中心），否则按极角落入方向扇环，返回区域索引。 */
+    /** Circle模式: Center心圆内Back -1（Center心），否则按极角落入方向扇环，Back区域索引。 */
     private fun regionAtCircle(x: Float, y: Float): Int {
         val dx = x - effectiveCenterX
         val dy = y - effectiveCenterY
@@ -521,11 +521,11 @@ class CustomKeypadView @JvmOverloads constructor(
         var deg = Math.toDegrees(Math.atan2(dy.toDouble(), dx.toDouble())).toFloat()
         if (deg < 0f) deg += 360f
         if (eightWay) {
-            // 8 扇区：0=右, 1=右下, 2=下, 3=左下, 4=左, 5=左上, 6=上, 7=右上。
+            // 8 扇区: 0=Right, 1=Down-right, 2=Down, 3=Down-left, 4=Left, 5=Up-left, 6=Up, 7=Up-right。
             val k = (((deg + 22.5f) % 360f) / 45f).toInt().coerceIn(0, 7)
             return circleSectorRegionEight[k]
         }
-        // 4 扇区：0=右, 1=下, 2=左, 3=上。
+        // 4 扇区: 0=Right, 1=Down, 2=Left, 3=Up。
         val k = (((deg + 45f) % 360f) / 90f).toInt().coerceIn(0, 3)
         return circleSectorRegionFour[k]
     }
@@ -536,7 +536,7 @@ class CustomKeypadView @JvmOverloads constructor(
         else -> 1
     }
 
-    /** 8 方向：按一体十字键的 3×3 网格判定落点，返回区域索引；中心格返回 -1。 */
+    /** 8 方向: 按D-pad的 3×3 网格判定落点，Back区域索引；Center心格Back -1。 */
     private fun regionAtEight(x: Float, y: Float): Int {
         val a = third
         val r = radius

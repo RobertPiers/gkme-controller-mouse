@@ -10,7 +10,7 @@ import kotlin.math.roundToInt
  */
 object HeJson {
 
-    /** 解析 HE1.0 的顶层 `Pattern`；失败返回 null。 */
+    /** 解析 HE1.0 的顶层 `Pattern`；失败Back null。 */
     fun parseHe10(json: String): List<RichTapRawCodec.HeEvent>? = try {
         val root = JSONObject(json)
         val arr = root.getJSONArray("Pattern")

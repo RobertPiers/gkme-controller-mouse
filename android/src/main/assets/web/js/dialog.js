@@ -32,7 +32,7 @@ function btnRow(negativeText, positiveText, onNegative, onPositive) {
 
 /** Android CustomDialog.showConfirm — resolves true on confirm, false otherwise. */
 export function showConfirm(title, message, opts = {}) {
-  const { positiveText = "确定", negativeText = "取消" } = opts;
+  const { positiveText = "OK", negativeText = "Cancel" } = opts;
   return new Promise((resolve) => {
     const { overlay, box, close } = openDialog();
     box.appendChild(el("div", { class: "dlgtitle", text: title }));
@@ -46,13 +46,13 @@ export function showConfirm(title, message, opts = {}) {
   });
 }
 
-/** Android CustomDialog.showSponsorDialog — 赞助 with the reward QR image. */
+/** Android CustomDialog.showSponsorDialog — Donate with the reward QR image. */
 export function showSponsorDialog() {
   const { overlay, box, close } = openDialog();
-  box.appendChild(el("div", { class: "dlgtitle", text: "赞助" }));
-  box.appendChild(el("div", { class: "dlgmsg", text: "感谢您的支持！" }));
-  box.appendChild(el("img", { class: "sponsorimg", src: "assets/reward.png", alt: "收款码" }));
-  box.appendChild(btnRow("关闭", null, () => close(), null));
+  box.appendChild(el("div", { class: "dlgtitle", text: "Donate" }));
+  box.appendChild(el("div", { class: "dlgmsg", text: "Thank you for your support!" }));
+  box.appendChild(el("img", { class: "sponsorimg", src: "assets/reward.png", alt: "Donation QR code" }));
+  box.appendChild(btnRow("Close", null, () => close(), null));
   overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
 }
 
@@ -61,22 +61,22 @@ export function showSponsorDialog() {
 export function showIosFullscreenHint() {
   const { overlay, box, close } = openDialog();
   box.classList.add("ioshintbox");
-  box.appendChild(el("div", { class: "dlgtitle", text: "全屏体验提示" }));
+  box.appendChild(el("div", { class: "dlgtitle", text: "Fullscreen tip" }));
   const msg = el("div", { class: "dlgmsg ioshintmsg" }, [
-    el("div", { text: "iOS Safari 无法直接全屏。" }),
+    el("div", { text: "iOS Safari cannot enter fullscreen directly." }),
     el("div", {}, [
-      "请点击底部的 ",
+      "Tap the bottom ",
       shareIcon(),
-      el("span", { class: "hl", text: "分享按钮" }),
-      "，选择",
+      el("span", { class: "hl", text: "Share button" }),
+      ", select ",
     ]),
     el("div", {}, [
-      el("span", { class: "hl", text: "「添加到主屏幕」" }),
-      "，再从此图标打开即可全屏运行。",
+      el("span", { class: "hl", text: "“Add to Home Screen”" }),
+      ", then launch from that icon for fullscreen.",
     ]),
   ]);
   box.appendChild(msg);
-  box.appendChild(btnRow(null, "我知道了", null, () => close()));
+  box.appendChild(btnRow(null, "Got it", null, () => close()));
   overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
 }
 
@@ -93,7 +93,7 @@ function shareIcon() {
 
 /** Android CustomDialog.showInput — resolves the trimmed string, or null on cancel. */
 export function showInput(title, opts = {}) {
-  const { hint = "", prefill = "", positiveText = "确定", negativeText = "取消" } = opts;
+  const { hint = "", prefill = "", positiveText = "OK", negativeText = "Cancel" } = opts;
   return new Promise((resolve) => {
     const { overlay, box, close } = openDialog();
     box.appendChild(el("div", { class: "dlgtitle", text: title }));

@@ -56,8 +56,8 @@ internal fun MainActivity.createFloatingEditor(): FloatingEditorPanel {
                     a.applyPreset(a.viewModel.currentPreset.value)
                     return
                 }
-                CustomDialog.showConfirm(a, "放弃修改", "确定放弃当前布局修改？",
-                    positiveText = "放弃", onPositive = {
+                CustomDialog.showConfirm(a, "Discard changes", "Discard changes to the current layout?",
+                    positiveText = "Discard", onPositive = {
                         a.gamepadLayout.discardToSnapshot()
                         a.gamepadLayout.exitEditMode()
                         a.viewModel.updateEditMode(false)
@@ -70,8 +70,8 @@ internal fun MainActivity.createFloatingEditor(): FloatingEditorPanel {
             }
 
             override fun onDeleteButton(buttonId: String) {
-                CustomDialog.showConfirm(a, "删除控件", "确定删除该控件？",
-                    positiveText = "删除", onPositive = {
+                CustomDialog.showConfirm(a, "Delete control", "Delete this control?",
+                    positiveText = "Delete", onPositive = {
                         a.gamepadLayout.removeButtonPosition(buttonId)
                         a.floatingEditor.clearParameters()
                     })
@@ -322,7 +322,7 @@ internal fun MainActivity.getPreviewText(entry: CtrlEntry, mode: DisplayMode): S
         "btnMouseMMB" -> "MMB"
         "btnMouseBack" -> "BACK"
         "btnMouseForward" -> "FWD"
-        "btnCustomCircle", "btnCustomRect" -> "自定义"
+        "btnCustomCircle", "btnCustomRect" -> "Custom"
         else -> null
     }
 }
@@ -525,7 +525,7 @@ internal fun MainActivity.showAddButtonDialog() {
     }
 
     var selectedIndex = 0
-    val tabLabels = arrayOf("手柄", "鼠标", "键盘", "自定义")
+    val tabLabels = arrayOf("Controller", "Mouse", "Keyboard", "Custom")
     val tabViews = arrayOfNulls<TextView>(4)
     val tabDatas = arrayOf(gamepadControls, mouseControls, keyboardControls, customControls)
 
@@ -578,7 +578,7 @@ internal fun MainActivity.showAddButtonDialog() {
     content.addView(contentLayout)
 
     val dialogW = minOf((a.resources.displayMetrics.widthPixels * 0.85f).toInt(), (700f * density).toInt())
-    a.addDialog = CustomDialog.showCustomView(a, "添加控件", content, dialogW, negativeText = "取消", scrollable = true)
+    a.addDialog = CustomDialog.showCustomView(a, "Add control", content, dialogW, negativeText = "Cancel", scrollable = true)
 }
 
 @SuppressLint("ClickableViewAccessibility")
@@ -662,7 +662,7 @@ internal fun MainActivity.addControl(entry: CtrlEntry) {
             val btn = if (!entry.lockAspect) RotatableButton(a) else Button(a)
             btn.apply {
                 this.id = View.generateViewId(); tag = id
-                text = "自定义"
+                text = "Custom"
                 setAllCaps(false)
                 setTextColor(-0x333334); textSize = 20f
                 setTypeface(null, Typeface.BOLD)
@@ -746,7 +746,7 @@ internal fun MainActivity.addControl(entry: CtrlEntry) {
             lockAspect = entry.lockAspect,
             isCustom = entry.isCustom,
             isKeyboard = entry.isKeyboard,
-            customText = "键盘",
+            customText = "Keyboard",
             customBits = emptyList(),
             roundShape = false,
         )
@@ -768,7 +768,7 @@ internal fun MainActivity.addControl(entry: CtrlEntry) {
             width = entry.w, height = entry.h,
             lockAspect = entry.lockAspect,
             isCustom = entry.isCustom,
-            customText = mouseTexts[entry.baseId] ?: "自定义",
+            customText = mouseTexts[entry.baseId] ?: "Custom",
             customBits = if (entry.isCustom) emptyList() else listOfNotNull(a.getBitForEntry(entry)),
             roundShape = entry.baseId == "btnCustomCircle",
         )
@@ -797,7 +797,7 @@ internal fun MainActivity.addControl(entry: CtrlEntry) {
 
 internal fun MainActivity.createCustomButtonView(pos: ButtonPosition): View {
     val a = this
-    val displayText = (pos.customText ?: "自定义").ifEmpty { "自定义" }
+    val displayText = (pos.customText ?: "Custom").ifEmpty { "Custom" }
     val view: View = if (pos.roundShape || pos.lockAspect) {
         Button(a).apply {
             id = View.generateViewId(); tag = pos.id
@@ -916,7 +916,7 @@ internal fun MainActivity.setupKeyboardTouchHandler(view: View, keyCode: Int, po
 internal fun MainActivity.applyPreset(preset: com.zyz4.gkme.model.LayoutPreset) {
     gamepadLayout.loadPreset(preset)
     ensureViewsForAllPresetButtons()
-    // 首次布局构建完成后挂一次性 pre-draw 监听，随后台首帧绘制上报启动总耗时。
+    // 首次Layout构建完成后挂一次性 pre-draw 监听，随后台首帧绘制Up报启动总耗时。
     AppStartupTracker.reportLayoutLoadedOnce(gamepadLayout)
 }
 
@@ -1086,7 +1086,7 @@ internal fun MainActivity.createStandardControlView(pos: ButtonPosition) {
             val btn = if (!entry.lockAspect) RotatableButton(a) else Button(a)
             btn.apply {
                 id = View.generateViewId(); tag = pos.id
-                text = "自定义"
+                text = "Custom"
                 setAllCaps(false)
                 setTextColor(-0x333334); textSize = 20f
                 setTypeface(null, Typeface.BOLD)
@@ -1322,7 +1322,7 @@ val labelText = entry.name
     }
 
     var selectedIndex = 0
-    val tabLabels = arrayOf("手柄", "鼠标", "键盘")
+    val tabLabels = arrayOf("Controller", "Mouse", "Keyboard")
 
     // Page container - defined before updateTabs so the lambda can reference it
     val pageContainer = LinearLayout(a).apply {
@@ -1381,7 +1381,7 @@ val labelText = entry.name
     content.addView(contentLayout)
 
     val dialogW = minOf((a.resources.displayMetrics.widthPixels * 0.85f).toInt(), (700f * density).toInt())
-    a.outputPickerDialog = CustomDialog.showCustomView(a, "选择映射键值", content, dialogW, negativeText = "取消", scrollable = true)
+    a.outputPickerDialog = CustomDialog.showCustomView(a, "Select mapped button", content, dialogW, negativeText = "Cancel", scrollable = true)
 }
 
 internal fun MainActivity.recreateViewForButton(buttonId: String, pos: ButtonPosition) {
@@ -1443,10 +1443,10 @@ internal fun MainActivity.recreateViewForButton(buttonId: String, pos: ButtonPos
                 "btnMouseMMB" -> "MMB"
                 "btnMouseBack" -> "BACK"
                 "btnMouseForward" -> "FWD"
-                else -> customText ?: "按钮"
+                else -> customText ?: "Button"
             }
         } else {
-            customText ?: entry?.name ?: "按钮"
+            customText ?: entry?.name ?: "Button"
         }
         val buttonView = if (!lockAspect) RotatableButton(a) else Button(a)
         buttonView.apply {

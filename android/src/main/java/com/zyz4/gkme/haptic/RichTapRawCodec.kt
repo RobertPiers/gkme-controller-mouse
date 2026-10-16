@@ -1,12 +1,12 @@
 package com.zyz4.gkme.haptic
 
 /**
- * RichTap 引擎 raw `int[]` 编码器（type 2「RichTapPerformer」用）。
+ * RichTap 引擎 raw `int[]` 编码器（type 2「RichTapPerformer”用）。
  *
  * 逆向自 RichTap ASDK 2.2.0 `com.apprichtap.haptic.base.b.a(String, version, core, minor, pid, sid, swap)`。
  * SDK 的 type 2 路径把 HE 解析成 raw int[]，再交给框架隐藏类
  * `android.os.RichTapVibrationEffect` / `richtap.os.PhonyVibrationEffect` 的
- * `createPatternHeWithParam(int[])` 下发。本对象复刻其 **HE1.0 与 HE2.0** 两条编码分支。
+ * `createPatternHeWithParam(int[])` Down发。本对象复刻其 **HE1.0 与 HE2.0** 两条编码分支。
  *
  * 与 [RichTapHe]（只产 HE1.0 JSON、给 type 1 的 `DynamicEffect`）不同，这里是编码成引擎 raw 数组。
  *
@@ -28,10 +28,10 @@ object RichTapRawCodec {
     private const val MAX_POINTS = 16
     private const val POINT_SCALE = 100.0
 
-    /** 曲线控制点：时间 ms、相对强度 0-1、HE 频率偏移。 */
+    /** 曲线控制点: 时间 ms、相对强度 0-1、HE 频率偏移。 */
     data class CurvePoint(val timeMs: Int, val scale: Double, val freqOffset: Int)
 
-    /** 一个事件的参数：基础强度 0-100、基础频率 0-100（-1 表示缺省）。 */
+    /** 一个事件的参数: 基础强度 0-100、基础频率 0-100（-1 表示缺省）。 */
     data class EventParams(val intensity: Int, val frequency: Int, val curve: List<CurvePoint>)
 
     /** HE 事件。 */
@@ -50,14 +50,14 @@ object RichTapRawCodec {
      * 编码为 raw int[]。
      *
      * @param events          HE1.0 事件（GKME 产出的就是 HE1.0）。
-     * @param heVersion       1 = HE1.0；2 = HE2.0。SDK 依 core 版本选择：core ≤ 23 → 1，否则 2。
+     * @param heVersion       1 = HE1.0；2 = HE2.0。SDK 依 core 版本Select: core ≤ 23 → 1，否则 2。
      * @param coreMajorRichTap RichTap core 主版本（checkIfRichTapSupport 解出）。
      * @param minorRichTap    RichTap core 次版本。
      * @param pid             发送者进程 id（仅 HE2.0 头部使用）。
      * @param sid             发送者 id（仅 HE2.0 头部使用）。
-     * @param swapVibrationIndex 是否交换左右马达索引。
+     * @param swapVibrationIndex 是否Swap left/right motors索引。
      * @param patterns        显式 HE2.0 pattern 列表；为 null 时把 [events] 包成单个 pattern。
-     * @return raw int[]；无法编码时返回 null。
+     * @return raw int[]；None法编码时Back null。
      */
     fun encode(
         events: List<HeEvent>,
@@ -74,7 +74,7 @@ object RichTapRawCodec {
             if (heVersion == 1) {
                 encodeHe10(out, events, coreMajorRichTap)
             } else {
-                // SDK：HE2.0 要求 core > 24
+                // SDK: HE2.0 要求 core > 24
                 if (coreMajorRichTap < 24) return null
                 encodeHe20(out, patterns ?: listOf(HePattern(0, events)), coreMajorRichTap, minorRichTap, pid, sid, swapVibrationIndex)
             }

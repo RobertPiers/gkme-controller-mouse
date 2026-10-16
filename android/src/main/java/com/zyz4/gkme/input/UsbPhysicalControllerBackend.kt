@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Physical-controller backend built on the ported "Axixi2233的USB驱动".
+ * Physical-controller backend built on the ported "Axixi2233 USB driver".
  *
  * It binds to [UsbDriverService], decodes raw USB HID reports for DualSense /
  * DualShock 4 / Xbox / Switch Pro controllers, and exposes the same state surface
@@ -216,7 +216,7 @@ class UsbPhysicalControllerBackend(private val context: Context) : PhysicalContr
         val active = activeInputController() ?: return
         if (active.getControllerId() != controllerId) return
         when (motionType) {
-            // USB 驱动返回的 gyro 单位是 deg/s，统一转为 rad/s 后输出
+            // USB DriverBack的 gyro 单 bits是 deg/s，统一转为 rad/s 后输出
             GkmeBridge.LI_MOTION_TYPE_GYRO -> {
                 val degToRad = Math.PI / 180.0
                 gyro = floatArrayOf(
@@ -252,7 +252,7 @@ class UsbPhysicalControllerBackend(private val context: Context) : PhysicalContr
                     val slot = pointerSlots.remove(pointerId)
                     if (slot != null) touchSlots[slot] = null
                 }
-                // 触摸板点击（BUTTON_ONLY）仅通过按钮位派生，不更新坐标也不分配 slot。
+                // Touchpad点击（BUTTON_ONLY）仅通过Button bits派生，不更新坐标也不分配 slot。
                 GkmeBridge.LI_TOUCH_EVENT_BUTTON_ONLY -> Unit
                 GkmeBridge.LI_TOUCH_EVENT_DOWN, GkmeBridge.LI_TOUCH_EVENT_MOVE,
                 GkmeBridge.LI_TOUCH_EVENT_HOVER -> {
@@ -539,7 +539,7 @@ class UsbPhysicalControllerBackend(private val context: Context) : PhysicalContr
     override fun rumble(lowFreqMotor: Int, highFreqMotor: Int) {
         val low = lowFreqMotor.coerceIn(0, 255)
         val high = highFreqMotor.coerceIn(0, 255)
-        
+
         if (gameVibrationDevice.type == VibrationDeviceType.CONTROLLER) {
             _lastRumbleLow = low
             _lastRumbleHigh = high
@@ -763,7 +763,7 @@ class UsbPhysicalControllerBackend(private val context: Context) : PhysicalContr
 
     private var lastPhoneAmp = -1
 
-    /** 普通振动是否已被 HD 通路接管（用于切换时取消残留的普通波形）。 */
+    /** 普通振动是否已被 HD 通路接管（用于切换时Cancel残留的普通波形）。 */
     private var phoneHdOwned = false
 
     private fun vibratePhoneMotors(low: Int, high: Int, swap: Boolean) {
@@ -799,7 +799,7 @@ class UsbPhysicalControllerBackend(private val context: Context) : PhysicalContr
             for (i in ids.indices) {
                 val amp = amps.getOrElse(i) { 0 }
                 if (amp > 0) {
-                    // VibrationEffect 不接受 0 幅度；0 幅度马达从组合中剔除即可关闭。
+                    // VibrationEffect 不接受 0 幅度；0 幅度马达从组合Center剔除即可Close。
                     combo.addVibrator(ids[i], VibrationEffect.createOneShot(60000, amp.coerceIn(1, 255)))
                     hasActive = true
                 }
@@ -808,7 +808,7 @@ class UsbPhysicalControllerBackend(private val context: Context) : PhysicalContr
                 vm.cancel()
                 return
             }
-            // 非 0 时直接 vibrate：新组合会替换上一个效果，无需先 cancel（避免高频流下残留）。
+            // 非 0 时直接 vibrate: 新组合会替换Up一个效果，None需先 cancel（避免高频流Down残留）。
             vm.vibrate(combo.combine())
         } catch (_: Exception) {
         }
@@ -826,7 +826,7 @@ class UsbPhysicalControllerBackend(private val context: Context) : PhysicalContr
         if (clamped < 1) {
             phoneHdOwned = false
             PhoneHdHaptics.stop(HapticSource.GAME_RUMBLE)
-            // 多马达路径在 VibratorManager 上启动：必须 manager.cancel() 才能停掉全部马达，
+            // 多马达路径在 VibratorManager Up启动: 必须 manager.cancel() 才能停掉全部马达，
             // 只 cancel 默认马达会遗漏其余马达直到 60s one-shot 过期。
             try { phoneVibratorManager()?.cancel() } catch (_: Exception) {}
             try { vibrator.cancel() } catch (_: Exception) {}
@@ -858,9 +858,9 @@ class UsbPhysicalControllerBackend(private val context: Context) : PhysicalContr
             "GameSirG7Controller" -> "GameSir G7"
             "Hid8BitdoController" -> "8BitDo"
             else -> when (controller.getType()) {
-                GkmeBridge.LI_CTYPE_XBOX -> "Xbox 手柄"
-                GkmeBridge.LI_CTYPE_PS -> "DS 手柄"
-                GkmeBridge.LI_CTYPE_NINTENDO -> "Switch 手柄"
+                GkmeBridge.LI_CTYPE_XBOX -> "Xbox controller"
+                GkmeBridge.LI_CTYPE_PS -> "DS controller"
+                GkmeBridge.LI_CTYPE_NINTENDO -> "Switch controller"
                 else -> controller.javaClass.simpleName
             }
         }

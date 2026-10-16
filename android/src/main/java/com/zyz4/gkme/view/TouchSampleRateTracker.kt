@@ -5,10 +5,10 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
- * 触控采样率识别器：从相邻触摸样本的时间间隔估计屏幕触控采样率。
+ * 触控采样率识别器: 从相邻触摸样本的时间间隔估计屏幕触控采样率。
  *
- * 屏幕摇杆（触摸板模式）与「快速响应模式」的摇杆/线性扳机共用同一套估计与日志逻辑：
- * 采集频率与预测外推时长都随屏幕触控采样率自适应，不再使用固定 16ms。
+ * 屏幕Stick（Touchpad mode）与「Fast response mode”的Stick/Linear trigger共用同一套估计与日志逻辑:
+ * 采集频率与预测外推Duration都随屏幕触控采样率自适应，不再使用固定 16ms。
  */
 class TouchSampleRateTracker(private val tag: String) {
 
@@ -36,7 +36,7 @@ class TouchSampleRateTracker(private val tag: String) {
         logIfChanged()
     }
 
-    /** 尚未识别时返回 [fallbackMs]，否则返回识别到的采样间隔。 */
+    /** 尚未识别时Back [fallbackMs]，否则Back识别到的采样间隔。 */
     fun intervalOr(fallbackMs: Float): Float = if (intervalMs > 0f) intervalMs else fallbackMs
 
     private fun logIfChanged() {
@@ -47,7 +47,7 @@ class TouchSampleRateTracker(private val tag: String) {
         if (now - lastLogTimeMs < LOG_THROTTLE_MS) return
         loggedRateHz = rateHz
         lastLogTimeMs = now
-        Log.d(tag, "识别到触控采样率 ≈ ${rateHz}Hz（采样间隔 ${String.format(Locale.US, "%.2f", intervalMs)}ms）")
+        Log.d(tag, "Detected touch sampling rate ≈ ${rateHz}Hz (sampling interval: ${String.format(Locale.US, "%.2f", intervalMs)}ms）")
     }
 
     companion object {

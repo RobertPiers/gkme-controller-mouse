@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.update
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** 触摸板归一化输出域：x ∈ 0..1919、y ∈ 0..942（与 uhid/AIDL 约定一致）。 */
+/** Touchpad归一化输出域: x ∈ 0..1919、y ∈ 0..942（与 uhid/AIDL 约定一致）。 */
 private const val TOUCHPAD_MAX_X = 1919
 private const val TOUCHPAD_MAX_Y = 942
 private const val TOUCHPAD_MAX_XF = 1919f
@@ -259,14 +259,14 @@ open class InputManagerPhysicalControllerBackend(private val context: Context) :
 
     protected open fun toInfo(device: InputDevice): ControllerInfo {
         val binding = bindingFor(device)
-        // 用解析后的轴映射判断扳机是否为模拟量：device.getMotionRange(axis, device.sources)
-        // 传入的是合并后的 source 掩码，无法匹配到单一 source 的 range，会恒为 null。
+        // 用解析后的轴映射判断Trigger是否为模拟量: device.getMotionRange(axis, device.sources)
+        // 传入的是合并后的 source 掩码，None法匹配到单一 source 的 range，会恒为 null。
         // 轴解析（resolveAxes）会分别按 SOURCE_JOYSTICK / SOURCE_GAMEPAD 查找，结果可靠。
         val axes = axisMapFor(device)
         val analogTriggers = axes.leftTrigger >= 0 && axes.rightTrigger >= 0
         return ControllerInfo(
             id = device.id,
-            name = device.name?.takeIf { it.isNotBlank() } ?: "手柄",
+            name = device.name?.takeIf { it.isNotBlank() } ?: "Controller",
             motorCount = binding?.motorCount ?: 0,
             hasTriggerRumble = false,
             hasAdaptiveTrigger = false,
@@ -458,7 +458,7 @@ open class InputManagerPhysicalControllerBackend(private val context: Context) :
         val old1 = activeSlot(1)
 
         // ACTION_POINTER_UP 时 event.pointerCount 仍包含即将抬起的手指；必须把它
-        // 从候选中排除，否则它占用的槽位不会被释放。
+        // 从候选Center排除，否则它占用的槽 bits不会被释放。
         val liftedIndex = if (action == MotionEvent.ACTION_POINTER_UP) event.actionIndex else -1
         val candidates = (0 until event.pointerCount)
             .filter { it != liftedIndex }
@@ -738,7 +738,7 @@ open class InputManagerPhysicalControllerBackend(private val context: Context) :
                     val nonStandardDs4 = device.vendorId == SONY_VENDOR_ID &&
                         device.hasKeys(KeyEvent.KEYCODE_BUTTON_C).firstOrNull() == true
                     if (nonStandardDs4) {
-                        // 老 DS4 驱动把 RX/RY 当作扳机，右摇杆回落到 Z/RZ。
+                        // 老 DS4 Driver把 RX/RY 当作Trigger，Right stick回落到 Z/RZ。
                         leftTrigger = MotionEvent.AXIS_RX
                         rightTrigger = MotionEvent.AXIS_RY
                     } else {
@@ -942,8 +942,8 @@ open class InputManagerPhysicalControllerBackend(private val context: Context) :
         val vm = binding.manager
         if (vm != null) {
             val ids = vm.vibratorIds
-            // 执行器顺序对齐 GKME 的 SDL 后端：id[0] = 低频（大/左）/强，id[1] = 高频（小/右）/弱，
-            // 2/3 = 左右扳机（本后端不驱动扳机，置 0）。注意这与 Moonlight 默认顺序相反
+            // 执行器顺序对齐 GKME 的 SDL 后端: id[0] = 低频（大/Left）/强，id[1] = 高频（小/Right）/弱，
+            // 2/3 = LeftRightTrigger（本后端不DriverTrigger，置 0）。注意这与 Moonlight 默认顺序相反
             // （Moonlight 是 [high, low]），因为 Android VibratorManager 与 SDL 的枚举顺序相反。
             if (binding.quad && ids.size >= 4) {
                 rumbleCombined(vm, ids, intArrayOf(low, high, 0, 0))
@@ -963,7 +963,7 @@ open class InputManagerPhysicalControllerBackend(private val context: Context) :
                 legacy.cancel()
                 legacy.vibrate(VibrationEffect.createOneShot(VIBRATION_DURATION_MS, amp))
             } else {
-                // 无幅度控制时用 PWM 模拟（Moonlight 的做法）。
+                // None幅度控制时用 PWM 模拟（Moonlight 的做法）。
                 val pwmPeriod = 20L
                 val onTime = (amp / 255.0 * pwmPeriod).toLong().coerceAtLeast(1L)
                 val offTime = (pwmPeriod - onTime).coerceAtLeast(1L)
@@ -974,7 +974,7 @@ open class InputManagerPhysicalControllerBackend(private val context: Context) :
         }
     }
 
-    /** 单马达模拟幅度：80% 强（低频）+ 33% 弱（高频），与 Moonlight 一致。 */
+    /** 单马达模拟幅度: 80% 强（低频）+ 33% 弱（高频），与 Moonlight 一致。 */
     private fun singleAmplitude(low: Int, high: Int): Int =
         minOf(255, (low * 0.80f + high * 0.33f).toInt()).coerceIn(0, 255)
 
@@ -1005,7 +1005,7 @@ open class InputManagerPhysicalControllerBackend(private val context: Context) :
                 return
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                // 默认 usage 可能被系统当作通知震动压低；游戏震动标记为 USAGE_MEDIA。
+                // 默认 usage 可能被系统当作通知Vibration压低；Game vibration标记为 USAGE_MEDIA。
                 val attributes = VibrationAttributes.Builder()
                     .setUsage(VibrationAttributes.USAGE_MEDIA)
                     .build()
@@ -1052,7 +1052,7 @@ open class InputManagerPhysicalControllerBackend(private val context: Context) :
         if (clamped < 1) {
             phoneHdOwned = false
             PhoneHdHaptics.stop(HapticSource.GAME_RUMBLE)
-            // 多马达路径是在 VibratorManager 上启动的：必须用 manager.cancel() 才能停掉
+            // 多马达路径是在 VibratorManager Up启动的: 必须用 manager.cancel() 才能停掉
             // 全部马达，只 cancel 默认马达会遗漏其余马达，直到 60s one-shot 自行过期。
             try { phoneVibratorManager()?.cancel() } catch (_: Exception) {}
             try { phoneVibrator()?.cancel() } catch (_: Exception) {}

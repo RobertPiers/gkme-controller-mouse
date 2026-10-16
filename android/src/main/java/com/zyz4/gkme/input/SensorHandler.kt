@@ -38,7 +38,7 @@ class SensorHandler(private val context: Context) : SensorEventListener {
     private var _accelZ = 0f
     private var _worldDx = 0f
     private var _worldDy = 0f
-    // 低通估计的重力方向，用于把线性加速度从加速度计读数中分离出来。
+    // 低通估计的重力方向，用于把线性加速度从加速度计读数Center分离出来。
     private var _gravX = 0f
     private var _gravY = 0f
     private var _gravZ = 0f
@@ -49,7 +49,7 @@ class SensorHandler(private val context: Context) : SensorEventListener {
     val sensorData: StateFlow<SensorData> = _sensorData.asStateFlow()
 
     fun start() {
-        // SENSOR_DELAY_FASTEST (0us) 请求硬件最大上报率；API 31+ 需
+        // SENSOR_DELAY_FASTEST (0us) 请求硬件最大Up报率；API 31+ 需
         // HIGH_SAMPLING_RATE_SENSORS 权限才能超过 200Hz，否则系统会静默限流。
         val rate = SensorManager.SENSOR_DELAY_FASTEST
         gyroscope?.let { sensorManager.registerListener(this, it, rate) }
@@ -77,7 +77,7 @@ class SensorHandler(private val context: Context) : SensorEventListener {
 
     companion object {
         /**
-         * 重力低通时间常数（秒）。用时间常数而非固定系数，使滤波收敛速度与实际采样率无关，
+         * 重力低通时间常数（秒）。用时间常数而非固定系数，使滤波收敛速度与实际采样率None关，
          * 这样把采样率提到 FASTEST 后不会改变重力的跟随手感。
          */
         private const val GRAVITY_TAU_SEC = 0.24f
@@ -136,8 +136,8 @@ class SensorHandler(private val context: Context) : SensorEventListener {
                 _accelY = ay
                 _accelZ = az
 
-                // 用低通估计重力方向，避免把运动中的线性加速度当成重力。
-                // 系数由相邻采样间隔推导，保证不同采样率下时间常数一致。
+                // 用低通估计重力方向，避免把运动Center的线性加速度当成重力。
+                // 系数由相邻采样间隔推导，保证不同采样率Down时间常数一致。
                 val dt = if (_lastAccelTs != 0L) (event.timestamp - _lastAccelTs) / 1_000_000_000f else 0f
                 _lastAccelTs = event.timestamp
                 val alpha = if (dt > 0f) (1f - exp(-dt / GRAVITY_TAU_SEC)).coerceIn(0f, 1f) else 1f

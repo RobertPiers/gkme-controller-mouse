@@ -8,10 +8,10 @@ import org.json.JSONObject
  * RichTap 预置效果（PrebakedEffect）的 HE 1.0 数据。
  *
  * 数据取自 RichTap ASDK 2.2.0 的 `com.apprichtap.haptic.base.c`（SDK 的 PrebakedEffect
- * 就是这些内嵌 HE），并已离线转换为设备端可解析的 HE 1.0：顶层 `PatternList`→`Pattern`、
+ * 就是这些内嵌 HE），并已离线转换为设备端可解析的 HE 1.0: 顶层 `PatternList`→`Pattern`、
  * 曲线裁成 4 点、`Frequency=-1`→56、丢弃 `Index`。
  *
- * ID 范围与 SDK 的 `PrebakedEffectId` 一致：[PREBAKED_ID_MIN]..[PREBAKED_ID_MAX]。
+ * ID 范围与 SDK 的 `PrebakedEffectId` 一致: [PREBAKED_ID_MIN]..[PREBAKED_ID_MAX]。
  */
 object RichTapPrebaked {
 
@@ -44,10 +44,10 @@ object RichTapPrebaked {
             patterns = map
             loaded = true
         } catch (t: Throwable) {
-            Log.w(TAG, "加载预置 HE 失败", t)
+            Log.w(TAG, "Failed to load HE preset", t)
         }
     }
 
-    /** 取指定预置效果的 HE 1.0 JSON；未加载或 ID 无效时返回 null。 */
+    /** 取指定预置效果的 HE 1.0 JSON；未加载或 ID None效时Back null。 */
     fun he(prebakedId: Int): String? = patterns[prebakedId]
 }

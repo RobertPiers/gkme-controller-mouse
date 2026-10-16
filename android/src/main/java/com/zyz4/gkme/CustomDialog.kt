@@ -27,7 +27,7 @@ object CustomDialog {
 
     fun showConfirm(
         context: Context, title: String, message: String,
-        positiveText: String = "确定", negativeText: String? = "取消",
+        positiveText: String = "OK", negativeText: String? = "Cancel",
         onPositive: () -> Unit = {}, onNegative: (() -> Unit)? = null,
     ): Dialog {
         val dialog = baseDialog(context)
@@ -44,7 +44,7 @@ object CustomDialog {
 
     fun showInput(
         context: Context, title: String, hint: String = "", prefill: String = "",
-        positiveText: String = "确定", negativeText: String? = "取消",
+        positiveText: String = "OK", negativeText: String? = "Cancel",
         onPositive: (String) -> Unit = {}, onNegative: (() -> Unit)? = null,
     ): Dialog {
         val dialog = baseDialog(context)

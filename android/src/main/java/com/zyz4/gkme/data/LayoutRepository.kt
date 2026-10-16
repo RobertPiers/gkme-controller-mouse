@@ -17,9 +17,9 @@ class LayoutRepository @Inject constructor(
 ) {
     companion object {
         val BUILT_IN_PRESETS = mapOf(
-            "完整控制器" to R.raw.full_con,
-            "鼠标" to R.raw.mouse,
-            "键盘" to R.raw.keyboard
+            "Full controller" to R.raw.full_con,
+            "Mouse" to R.raw.mouse,
+            "Keyboard" to R.raw.keyboard
         )
 
         private const val CACHE_DIR_NAME = "preset_cache"
@@ -239,8 +239,8 @@ class LayoutRepository @Inject constructor(
     }
 
     /**
-     * 强制从 raw 资源重新加载指定内置预设的出厂内容（完整控制器/鼠标/键盘），
-     * 先清除该名称下的内存/磁盘缓存，避免返回用户编辑后的旧版本。
+     * 强制从 raw 资源重新加载指定内置预设的出厂内容（Full controller/Mouse/Keyboard），
+     * 先清除该名称Down的内存/磁盘缓存，避免Back用户Edit后的旧版本。
      */
     fun reloadBuiltInPreset(name: String): LayoutPreset? {
         val rawId = BUILT_IN_PRESETS[name] ?: return null

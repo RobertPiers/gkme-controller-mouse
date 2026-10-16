@@ -11,12 +11,12 @@ import android.view.View
 import android.view.WindowManager
 
 /**
- * 悬浮窗保活：被控端运行时在屏幕上挂一个 1×1 像素、完全透明且不可触摸的悬浮窗。
+ * Keep-alive overlay: Host运行时在屏幕Up挂一个 1×1 像素、完全透明且不可触摸的悬浮窗。
  *
  * 只要本进程持有一个系统级悬浮窗，系统就会把它视为“有可见窗口”的进程，
  * 从而在后台/熄屏时更不容易被内存或省电策略回收（国产 ROM 尤为如此）。
  *
- * 该方法不强制，由设置里的「悬浮窗保活」开关控制；需要 [Settings.canDrawOverlays] 权限，
+ * 该方法不强制，由Settings里的「Keep-alive overlay”开关控制；需要 [Settings.canDrawOverlays] 权限，
  * 未授权时 [start] 会直接跳过，由界面引导用户授权。
  */
 object FloatingKeepAlive {
@@ -28,17 +28,17 @@ object FloatingKeepAlive {
     @Volatile
     private var view: View? = null
 
-    /** 是否已获得“显示在其他应用上层”权限。 */
+    /** 是否已获得“Display在其他应用Up层”权限。 */
     fun canDrawOverlays(context: Context): Boolean =
         Settings.canDrawOverlays(context.applicationContext)
 
     fun isActive(): Boolean = view != null
 
-    /** 开启悬浮窗保活；需 [canDrawOverlays] 为 true，否则记录日志并放弃。 */
+    /** 开启Keep-alive overlay；需 [canDrawOverlays] 为 true，否则记录日志并Discard。 */
     fun start(context: Context) {
         val app = context.applicationContext
         if (!canDrawOverlays(app)) {
-            Log.w(TAG, "缺少悬浮窗权限，跳过悬浮窗保活")
+            Log.w(TAG, "Missing overlay permission; skipping keep-alive overlay")
             return
         }
         mainHandler.post {
@@ -61,14 +61,14 @@ object FloatingKeepAlive {
             try {
                 wm.addView(v, params)
                 view = v
-                Log.i(TAG, "悬浮窗保活已生效")
+                Log.i(TAG, "Keep-alive overlay active")
             } catch (t: Throwable) {
-                Log.w(TAG, "添加保活悬浮窗失败: ${t.message}")
+                Log.w(TAG, "Failed to add keep-alive overlay: ${t.message}")
             }
         }
     }
 
-    /** 关闭悬浮窗保活并移除窗口。 */
+    /** CloseKeep-alive overlay并移除窗口。 */
     fun stop() {
         mainHandler.post {
             val v = view ?: return@post
@@ -76,9 +76,9 @@ object FloatingKeepAlive {
             val wm = v.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
             try {
                 wm?.removeView(v)
-                Log.i(TAG, "悬浮窗保活已停止")
+                Log.i(TAG, "Keep-alive overlay stopped")
             } catch (t: Throwable) {
-                Log.w(TAG, "移除保活悬浮窗失败: ${t.message}")
+                Log.w(TAG, "Failed to remove keep-alive overlay: ${t.message}")
             }
         }
     }

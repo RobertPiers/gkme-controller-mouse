@@ -301,7 +301,7 @@ public abstract class AbstractDualSenseController extends AbstractController {
         }
 
         Log.i("DualSenseController", "Attempting nativeConnectHaptics fd=" + fd + " ifaceId=" + getAdvancedAudioHapticsInterfaceId() + " alt=" + getAdvancedAudioHapticsAlternateSetting() + " ep=0x" + Integer.toHexString(getAdvancedAudioHapticsEndpointAddress() & 0xFF));
-        
+
         boolean connected = HapticNative.nativeConnectHaptics(fd,
                 getAdvancedAudioHapticsInterfaceId(),
                 getAdvancedAudioHapticsAlternateSetting(),

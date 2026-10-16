@@ -60,11 +60,11 @@ class DsuService(
                 soTimeout = 8
             }
         } catch (e: java.net.BindException) {
-            onError?.invoke("端口被占用，可能另一个实例已在运行: ${e.message}")
+            onError?.invoke("Port in use; another instance may already be running: ${e.message}")
             stop()
             return false
         } catch (e: Exception) {
-            onError?.invoke("创建 DSU 套接字失败: ${e.message}")
+            onError?.invoke("Failed to create DSU socket: ${e.message}")
             stop()
             return false
         }

@@ -13,14 +13,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
-    <!-- 被控端：申请 Shizuku 权限 -->
+    <!-- Host: 申请 Shizuku 权限 -->
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
 
     <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
 
-    <!-- 用于检测/打开 Shizuku -->
+    <!-- 用于Detect/Open Shizuku -->
     <queries>
         <package android:name="moe.shizuku.privileged.api" />
     </queries>
@@ -34,8 +34,8 @@
         android:theme="@style/Theme.GKME"
         android:icon="@mipmap/icon">
 
-        <!-- RichTap：声明该共享库后，ROM 允许 app 进程直接访问 RichTap 隐藏 API
-             （android.os.HapticPlayer / DynamicEffect），从而在前台 uid 下下发 HD 震动。 -->
+        <!-- RichTap: 声明该共享库后，ROM 允许 app 进程直接访问 RichTap 隐藏 API
+             （android.os.HapticPlayer / DynamicEffect），从而在前台 uid DownDown发 HD Vibration。 -->
         <uses-library
             android:name="richtap-api"
             android:required="false" />
@@ -65,7 +65,7 @@
                 android:value="floating_gamepad_overlay" />
         </service>
 
-        <!-- 作为被控端：发现控制端并创建本地虚拟手柄 -->
+        <!-- Host mode: 发现控制端并Create本地虚拟Controller -->
         <activity
             android:name=".controlled.ControlledActivity"
             android:exported="false"
@@ -73,7 +73,7 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- 被控端前台服务：常驻通知，防止熄屏/后台时被系统杀进程 -->
+        <!-- Host前台服务: 常驻通知，防止熄屏/后台时被系统杀进程 -->
         <service
             android:name=".controlled.ControlledHostService"
             android:exported="false"
@@ -84,7 +84,7 @@
         </service>
 
         <!-- Shizuku（提供 shell/root 身份运行 UserService）。
-             使用本项目子类以串行化并发下发的 binder，规避 Shizuku 库的 onBinderReceived 竞态。 -->
+             使用本项目子类以串行化并发Down发的 binder，规避 Shizuku 库的 onBinderReceived 竞态。 -->
         <provider
             android:name=".GkmeShizukuProvider"
             android:authorities="${applicationId}.shizuku"

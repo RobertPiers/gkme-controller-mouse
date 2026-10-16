@@ -63,7 +63,7 @@ object SdlAudio {
                 } catch (_: Throwable) {
                     ""
                 }
-                Device(id, name.ifBlank { "声音设备${index + 1}" })
+                Device(id, name.ifBlank { "Audio device${index + 1}" })
             }
         }
     }

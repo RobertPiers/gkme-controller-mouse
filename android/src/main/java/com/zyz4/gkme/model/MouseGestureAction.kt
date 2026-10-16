@@ -1,21 +1,21 @@
 package com.zyz4.gkme.model
 
 /**
- * 鼠标触控板手势动作。
+ * Mouse触控板手势动作。
  *
- * 点击类手势（单击 / 双指点击 / 三指点击）只使用 [NONE] + 三种鼠标点击；
- * 滑动类手势（双击后滑动 / 单指 / 双指 / 三指滑动）额外支持移动光标、拖拽与滚动。
+ * 点击类手势（Single tap / Two-finger tap / Three-finger tap）只使用 [NONE] + 三种Mouse点击；
+ * 滑动类手势（Double-tap and drag / 单指 / 双指 / Three-finger swipe）额外SupportedMove cursor、拖拽与Scroll。
  */
 enum class MouseGestureAction(val displayName: String) {
-    NONE("无"),
-    MOVE_CURSOR("移动光标"),
-    LEFT_CLICK("左键点击"),
-    RIGHT_CLICK("右键点击"),
-    MIDDLE_CLICK("中键点击"),
-    LEFT_DRAG("左键拖拽"),
-    RIGHT_DRAG("右键拖拽"),
-    MIDDLE_DRAG("中键拖拽"),
-    SCROLL("滚动");
+    NONE("None"),
+    MOVE_CURSOR("Move cursor"),
+    LEFT_CLICK("Left click"),
+    RIGHT_CLICK("Right click"),
+    MIDDLE_CLICK("Middle click"),
+    LEFT_DRAG("Left-button drag"),
+    RIGHT_DRAG("Right-button drag"),
+    MIDDLE_DRAG("Middle-button drag"),
+    SCROLL("Scroll");
 
     companion object {
         /** 点击手势可选动作（4 项）。 */

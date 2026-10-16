@@ -1,12 +1,12 @@
 package com.zyz4.gkme.haptic
 
 /**
- * 构造 RichTap HE 1.0 动态效果 JSON。
+ * 构造 RichTap HE 1.0 Dynamic效果 JSON。
  *
  * 设备端 `android.os.DynamicEffect.create(String)` 只认 HE 1.0（顶层 `Pattern`），且每条
  * `Curve` 会被裁成 4 点，因此这里直接产出 4 点曲线，避免依赖 SDK 的 HE2.0→HE1.0 转换。
  *
- * 约定：
+ * 约定:
  * - `Parameters.Intensity` 为 0-100，`Curve[].Intensity` 为 0-1（相对强度包络）。
  * - `Parameters.Frequency` 为 0-100，`Curve[].Frequency` 为频率偏移。
  * - 具体的全局强度/频率由 `HapticPlayer.start(loop, interval, amplitude, freq)` 覆盖。
@@ -17,9 +17,9 @@ object RichTapHe {
     private const val POINT_COUNT = 4
 
     /**
-     * 恒定（近似方波）连续效果：整段保持同一强度，适合游戏 rumble 这类持续震动。
+     * 恒定（近似方波）连续效果: 整段保持同一强度，适合游戏 rumble 这类持续Vibration。
      *
-     * @param durationMs 单次播放时长，调用方可循环播放。
+     * @param durationMs 单次播放Duration，调用方可循环播放。
      */
     fun continuous(frequency: Int, durationMs: Int): String {
         val dur = durationMs.coerceAtLeast(20)
@@ -35,7 +35,7 @@ object RichTapHe {
     }
 
     /**
-     * 短促的“点击”效果：快速起振后衰减，比普通 one-shot 更有质感。
+     * 短促的“点击”效果: 快速起振后衰减，比普通 one-shot 更有质感。
      *
      * @param strength  相对强度 0-100。
      * @param frequency 频率 0-100。
@@ -54,11 +54,11 @@ object RichTapHe {
     }
 
     /**
-     * 带时间曲线的连续效果：单次效果内体现音高/强度变化。
+     * 带时间曲线的连续效果: 单次效果内体现音高/强度变化。
      *
-     * @param durationMs 效果总时长。
+     * @param durationMs 效果总Duration。
      * @param baseFreq   基础 HE 频率（0-100）；曲线里的频率偏移相对它叠加。
-     * @param points     控制点（时间 ms、相对强度 0-1、频率偏移），最多 4 点（本机只认 4 点）。
+     * @param points     控制点（时间 ms、相对强度 0-1、频率偏移），最多 4 点（Local只认 4 点）。
      */
     fun curve(durationMs: Int, baseFreq: Int, points: List<CurvePoint>): String {
         val dur = durationMs.coerceAtLeast(1)
@@ -80,17 +80,17 @@ object RichTapHe {
             "}}}]}"
     }
 
-    /** 曲线控制点：[timeMs] 时间、[intensity] 相对强度 0-1、[freqOffset] HE 频率偏移。 */
+    /** 曲线控制点: [timeMs] 时间、[intensity] 相对强度 0-1、[freqOffset] HE 频率偏移。 */
     data class CurvePoint(val timeMs: Int, val intensity: Double, val freqOffset: Double)
 
     /**
-     * 多事件效果中的一个 `continuous` 事件。
+     * 多事件效果Center的一个 `continuous` 事件。
      *
      * @param relativeTimeMs 相对效果起点的开始时间。
-     * @param durationMs     事件时长（必须 ≤ 5000ms）。
+     * @param durationMs     事件Duration（必须 ≤ 5000ms）。
      * @param baseFreq       基础 HE 频率 0-100；[points] 的频率为相对它的偏移。
-     * @param points         控制点；**必须恰好 4 个**（真机实测：非 4 点会使 HAL 报
-     *                       `Invalid time param` 并导致整条效果无输出）。
+     * @param points         控制点；**必须恰好 4 个**（真机实测: 非 4 点会使 HAL 报
+     *                       `Invalid time param` 并导致整条效果None输出）。
      */
     data class Event(
         val relativeTimeMs: Int,
@@ -102,7 +102,7 @@ object RichTapHe {
     /**
      * 构造一条包含多个 `continuous` 事件的 HE 1.0 效果（顶层 `Pattern` 数组）。
      *
-     * 真机实测：单条效果**最多 16 个事件**，超出会被 HAL 整条丢弃；每个事件的 `Duration`
+     * 真机实测: 单条效果**最多 16 个事件**，超出会被 HAL 整条丢弃；每个事件的 `Duration`
      * 必须 ≤ 5000ms。事件由引擎内部调度，因此相比反复 `stop()+start()` 分段投递，段与段
      * 之间没有切换凹陷。
      */
@@ -156,9 +156,9 @@ object RichTapHe {
     }
 
     /**
-     * 把控制点补齐到恰好 [POINT_COUNT] 个：多于 4 点截断，少于 4 点用最后一点在 `dur` 处补位。
+     * 把控制点补齐到恰好 [POINT_COUNT] 个: 多于 4 点截断，少于 4 点用最后一点在 `dur` 处补 bits。
      *
-     * 真机实测：`Curve` 少于 4 点会使 HAL 报 `Invalid time param` 并导致整条效果无输出。
+     * 真机实测: `Curve` 少于 4 点会使 HAL 报 `Invalid time param` 并导致整条效果None输出。
      */
     private fun normalize(points: List<CurvePoint>, dur: Int): List<CurvePoint> {
         val taken = points.take(POINT_COUNT)

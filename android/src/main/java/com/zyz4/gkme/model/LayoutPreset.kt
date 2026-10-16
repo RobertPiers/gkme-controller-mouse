@@ -68,7 +68,7 @@ data class LayoutPreset(
 
         /**
          * 将旧版透明度字段 (0=不透明, 255=全透明) 迁移为不透明度字段 (100=不透明, 0=全透明)。
-         * 若已存在新字段则以新字段为准，并移除旧字段，保证保存后自动替换。
+         * 若已存在新字段则以新字段为准，并移除旧字段，保证Save后自动替换。
          */
         private fun migrateLegacyOpacity(obj: JsonObject, legacyKey: String, newKey: String) {
             val legacy = obj.get(legacyKey) ?: return
@@ -159,7 +159,7 @@ data class LayoutPreset(
                         btnObj.addProperty("slideDirection", normalized)
                     }
 
-                    // 旧版触摸板按下按钮 id "btnTouchpad" 迁移为 "btnShare"，保留多实例后缀。
+                    // 旧版TouchpadPressButton id "btnTouchpad" 迁移为 "btnShare"，保留多实例后缀。
                     btnObj.get("id")?.asString?.let { oldId ->
                         if (oldId == "btnTouchpad" || oldId.startsWith("btnTouchpad_")) {
                             btnObj.addProperty("id", "btnShare" + oldId.removePrefix("btnTouchpad"))
@@ -237,7 +237,7 @@ data class LayoutPreset(
             m["rotation"] = b.rotation
             if (b.isCustom) {
                 m["isCustom"] = b.isCustom
-                m["customText"] = (b.customText ?: "自定义")
+                m["customText"] = (b.customText ?: "Custom")
                 m["customBits"] = (b.customBits ?: listOf<Int>())
             }
             if (b.roundShape != true) m["roundShape"] = b.roundShape

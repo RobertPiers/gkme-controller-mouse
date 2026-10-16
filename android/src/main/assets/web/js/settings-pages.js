@@ -24,10 +24,10 @@ export const PAGES = {
   connection(app, root) {
     const hz = POLL_RATES.includes(app.settings.pollingHz) ? app.settings.pollingHz : 120;
     root.appendChild(
-      section("连接", [
-        row("状态", el("span", { text: app.conn.connected ? "已连接" : "未连接", class: "statusval" })),
+      section("Connect", [
+        row("Status", el("span", { text: app.conn.connected ? "Connected" : "Not connected", class: "statusval" })),
         row(
-          "轮询率",
+          "Polling rate",
           select(
             POLL_RATES.map((r) => [r, r + " Hz"]),
             String(hz),
@@ -38,7 +38,7 @@ export const PAGES = {
           )
         ),
         el("div", { class: "btnrow" }, [
-          button("进入全屏", () => app._enterFullscreen()),
+          button("Enter fullscreen", () => app._enterFullscreen()),
         ]),
       ])
     );
@@ -47,7 +47,7 @@ export const PAGES = {
   presets(app, root) {
     const build = () => {
       root.innerHTML = "";
-      root.appendChild(el("div", { class: "presettitle", text: "布局预设" }));
+      root.appendChild(el("div", { class: "presettitle", text: "Layout presets" }));
 
       const current = app.activePreset;
       const isBuiltIn = app.isBuiltInPreset(current);
@@ -59,14 +59,14 @@ export const PAGES = {
         chips.appendChild(b);
         return b;
       };
-      chip("新建", async () => { if (await app.newPreset()) build(); });
-      chip("编辑", () => app.enterEditMode());
-      if (isBuiltIn) chip("恢复默认", async () => { if (await app.restoreCurrentDefault()) build(); });
-      chip("复制", async () => { if (await app.copyCurrentPreset()) build(); });
-      chip("导出", () => app.exportCurrentPreset());
+      chip("New", async () => { if (await app.newPreset()) build(); });
+      chip("Edit", () => app.enterEditMode());
+      if (isBuiltIn) chip("Restore defaults", async () => { if (await app.restoreCurrentDefault()) build(); });
+      chip("Copy", async () => { if (await app.copyCurrentPreset()) build(); });
+      chip("Export", () => app.exportCurrentPreset());
       chips.appendChild(
         el("label", { class: "filebtn presetchip" }, [
-          "导入",
+          "Import",
           el("input", {
             type: "file",
             accept: ".json,application/json",
@@ -80,12 +80,12 @@ export const PAGES = {
         ])
       );
       if (!isBuiltIn) {
-        chip("重命名", async () => { if (await app.renameCurrentPreset()) build(); });
-        chip("删除", async () => { if (await app.deleteCurrentPreset()) build(); });
+        chip("Rename", async () => { if (await app.renameCurrentPreset()) build(); });
+        chip("Delete", async () => { if (await app.deleteCurrentPreset()) build(); });
       }
       root.appendChild(chips);
 
-      root.appendChild(el("div", { class: "presetcurrent", text: "当前预设: " + current }));
+      root.appendChild(el("div", { class: "presetcurrent", text: "Current preset: " + current }));
 
       const grid = el("div", { class: "presetgrid" });
       for (const name of app.presetNames()) {
@@ -114,46 +114,46 @@ export const PAGES = {
       for (const p of navigator.getGamepads()) if (p && p.connected) pads.push(p);
     }
     root.appendChild(
-      section("实体手柄（Gamepad API）", [
-        row("转发实体手柄", toggle(app.settings.physical.forward, (v) => (app.settings.physical.forward = v))),
-        row("已连接手柄", el("span", { class: "statusval", text: String(pads.length) })),
+      section("Physical controller (Gamepad API)", [
+        row("Forward physical controller", toggle(app.settings.physical.forward, (v) => (app.settings.physical.forward = v))),
+        row("Connected controllers", el("span", { class: "statusval", text: String(pads.length) })),
       ])
     );
     const listEl = el("div", { class: "padlist" });
     if (pads.length === 0) {
-      listEl.appendChild(el("p", { class: "hint", text: "未检测到实体手柄。通过蓝牙/OTG 连接手柄后，在浏览器中按一次手柄按键即可被识别。" }));
+      listEl.appendChild(el("p", { class: "hint", text: "No physical controller detected. Connect one via Bluetooth/OTG, then press a controller button while in the browser to detect it." }));
     } else {
       for (const p of pads) {
-        listEl.appendChild(el("div", { class: "padsrow", text: `${p.index}: ${p.id} (${p.mapping}) — ${p.buttons.length} 键 / ${p.axes.length} 轴` }));
+        listEl.appendChild(el("div", { class: "padsrow", text: `${p.index}: ${p.id} (${p.mapping}) — ${p.buttons.length} buttons / ${p.axes.length} axes` }));
       }
     }
-    root.appendChild(section("设备列表", [listEl]));
+    root.appendChild(section("Device list", [listEl]));
     root.appendChild(
-      el("p", { class: "hint", text: "浏览器只能读取标准映射手柄的按键/摇杆/扳机，无法透传自适应扳机、触摸板、HD 震动等厂商特性。" })
+      el("p", { class: "hint", text: "Browsers can only read buttons, sticks, and triggers from standard-mapped controllers. Vendor features such as adaptive triggers, touchpads, and HD rumble cannot be forwarded." })
     );
   },
 
   vibration(app, root) {
     const build = () => {
       root.innerHTML = "";
-      root.appendChild(section("按钮震动", [buttonVibrationControls(app, build)]));
+      root.appendChild(section("Button vibration", [buttonVibrationControls(app, build)]));
 
       const hs = app.settings.haptics;
       const pads = connectedGamepads();
       if (!hs.device || typeof hs.device !== "object") hs.device = { type: "phone", controllerIndex: 0 };
 
-      const options = [["phone", "手机马达"]];
+      const options = [["phone", "Phone motor"]];
       pads.forEach((p, i) => options.push(["controller:" + i, gamepadLabel(p, i)]));
-      options.push(["none", "无"]);
+      options.push(["none", "None"]);
 
       let value = hs.device.type === "controller" ? "controller:" + (hs.device.controllerIndex | 0) : hs.device.type;
       if (!options.some(([v]) => v === value)) value = "phone";
       const shown = parseVibrationDevice(value, pads);
 
       const rows = [
-        row("接收主机震动", toggle(hs.gameVibrate, (v) => (hs.gameVibrate = v))),
+        row("Receive host vibration", toggle(hs.gameVibrate, (v) => (hs.gameVibrate = v))),
         row(
-          "震动设备",
+          "Vibration device",
           select(options, value, (v) => {
             hs.device = parseVibrationDevice(v, pads);
             build();
@@ -164,7 +164,7 @@ export const PAGES = {
         const isController = shown.type === "controller";
         rows.push(
           row(
-            "交换左右马达",
+            "Swap left/right motors",
             toggle(isController ? hs.swapControllerMotors : hs.swapPhoneMotors, (v) => {
               if (isController) hs.swapControllerMotors = v;
               else hs.swapPhoneMotors = v;
@@ -173,7 +173,7 @@ export const PAGES = {
         );
       }
 
-      root.appendChild(section("游戏震动", rows));
+      root.appendChild(section("Game vibration", rows));
       root.appendChild(el("p", { class: "hint", text: hapticsHint(app, shown, pads) }));
     };
     build();
@@ -181,9 +181,9 @@ export const PAGES = {
 
   misc(app, root) {
     root.appendChild(
-      section("显示", [
+      section("Display", [
         row(
-          "按键样式",
+          "Button style",
           select(
             DISPLAY_MODES.map((m) => [m, m]),
             app.settings.displayMode,
@@ -193,7 +193,7 @@ export const PAGES = {
             }
           )
         ),
-        row("保持屏幕常亮", toggle(app.settings.screen.keepAwake, (v) => {
+        row("Keep screen on", toggle(app.settings.screen.keepAwake, (v) => {
           app.settings.screen.keepAwake = v;
           if (v) app._acquireWakeLock();
           else app._releaseWakeLock();
@@ -201,8 +201,8 @@ export const PAGES = {
       ])
     );
     root.appendChild(
-      section("息屏模式（近似）", [
-        button("进入息屏模式", () => {
+      section("Screen-off mode (simulated)", [
+        button("Enter screen-off mode", () => {
           app.closeSettings();
           let overlay = document.getElementById("screenOff");
           if (!overlay) {
@@ -215,18 +215,18 @@ export const PAGES = {
       ])
     );
     root.appendChild(
-      section("重置", [
+      section("Reset", [
         el("div", { class: "btnrow" }, [
-          button("重置全部设置", async () => {
-            if (!(await showConfirm("重置全部设置", "确定恢复默认设置？", { positiveText: "重置" }))) return;
+          button("Reset all settings", async () => {
+            if (!(await showConfirm("Reset all settings", "Restore default settings?", { positiveText: "Reset" }))) return;
             app.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
             applyAppearance(app);
             app.layout.setDisplayMode(app.settings.displayMode);
             app._restartSendLoop();
             app._selectCategory("misc");
           }, "danger"),
-          button("重置当前预设", async () => {
-            if (!(await showConfirm("重置当前预设", "确定恢复当前预设为默认？", { positiveText: "重置" }))) return;
+          button("Reset current preset", async () => {
+            if (!(await showConfirm("Reset current preset", "Restore the current preset to defaults?", { positiveText: "Reset" }))) return;
             app.presets[app.activePreset] = { version: 1, buttons: [] };
             save(app);
             app.layout.setPreset(app.presets[app.activePreset]);
@@ -239,17 +239,17 @@ export const PAGES = {
   about(app, root) {
     root.appendChild(
       el("div", { class: "aboutpage" }, [
-        el("img", { class: "abouticon", src: "assets/icon.png", alt: "应用图标" }),
+        el("img", { class: "abouticon", src: "assets/icon.png", alt: "App icon" }),
         el("div", { class: "aboutname", text: "GKME" }),
-        el("div", { class: "aboutver", text: "版本 " + APP_VERSION }),
+        el("div", { class: "aboutver", text: "Version " + APP_VERSION }),
         el("div", {
           class: "aboutdesc",
           text:
-            "作者：4zyz4  软件Q群：639317971\n\n" +
-            "开源地址：https://github.com/4zyz4/gkme\n" +
-            "注意：本软件不是Emotion，请进入Q群1045923515以下载正版Emotion",
+            "Author: 4zyz4  QQ group: 639317971\n\n" +
+            "Source: https://github.com/4zyz4/gkme\n" +
+            "Note: This app is not Emotion. Join QQ group 1045923515 to download the official Emotion app.",
         }),
-        button("赞助", () => showSponsorDialog(), "aboutsponsor"),
+        button("Donate", () => showSponsorDialog(), "aboutsponsor"),
       ])
     );
   },
@@ -259,7 +259,7 @@ function save(app) {
   savePresets(app.presets);
 }
 
-// ── Button vibration (按下 / 松开), mirrors the Android two-column layout ──
+// ── Button vibration (Press / Release), mirrors the Android two-column layout ──
 
 function buttonVibrationControls(app, rebuild) {
   const hs = app.settings.haptics;
@@ -267,7 +267,7 @@ function buttonVibrationControls(app, rebuild) {
     const typeKey = isPress ? "buttonPressType" : "buttonReleaseType";
     const durKey = isPress ? "buttonPressDuration" : "buttonReleaseDuration";
     const chips = el("div", { class: "vibchips" });
-    for (const [val, text] of [["none", "无"], ["custom", "自定义"]]) {
+    for (const [val, text] of [["none", "None"], ["custom", "Custom"]]) {
       const chip = el("button", { class: "btn vibchip" + (hs[typeKey] === val ? " on" : ""), text });
       chip.addEventListener("click", () => {
         hs[typeKey] = val;
@@ -278,19 +278,19 @@ function buttonVibrationControls(app, rebuild) {
     const kids = [el("div", { class: "vibcoltitle", text: title }), chips];
     if (hs[typeKey] === "custom") {
       kids.push(
-        row("时长", slider(5, 60, 1, hs[durKey], (v) => (hs[durKey] = v), (v) => v + " ms"))
+        row("Duration", slider(5, 60, 1, hs[durKey], (v) => (hs[durKey] = v), (v) => v + " ms"))
       );
     }
     return el("div", { class: "vibcol" }, kids);
   };
-  return el("div", { class: "vibcols" }, [column(true, "按下"), column(false, "松开")]);
+  return el("div", { class: "vibcols" }, [column(true, "Press"), column(false, "Release")]);
 }
 
 // ── Vibration device helpers ──
 
 function gamepadLabel(pad, index) {
   const id = (pad && pad.id ? pad.id : "").trim();
-  if (!id) return "手柄" + (index + 1);
+  if (!id) return "Controller" + (index + 1);
   return id.length > 30 ? id.slice(0, 30) + "…" : id;
 }
 
@@ -306,16 +306,16 @@ function parseVibrationDevice(value, pads) {
 }
 
 function hapticsHint(app, device, pads) {
-  if (device.type === "none") return "已关闭游戏震动输出。";
+  if (device.type === "none") return "Game vibration output is disabled.";
   if (device.type === "controller") {
     const actuator = gamepadActuator(pads[device.controllerIndex | 0]);
     return actuator
-      ? "游戏震动通过 Gamepad API 的 dual-rumble 发送到所选手柄（强/弱双马达）。"
-      : "所选手柄不支持震动：浏览器未提供 vibrationActuator（部分手柄依赖厂商驱动）。";
+      ? "Game vibration is sent to the selected controller using the Gamepad API dual-rumble effect (strong/weak motors)."
+      : "The selected controller does not support vibration: the browser provides no vibrationActuator (some controllers require vendor drivers).";
   }
   return app.haptics.supported
-    ? "手机马达使用浏览器 Vibration API（仅移动端浏览器支持）。"
-    : "当前浏览器不支持 Vibration API。";
+    ? "The phone motor uses the browser Vibration API (mobile browsers only)."
+    : "This browser does not support the Vibration API.";
 }
 
 // Miniature layout preview for a preset card (mirrors PresetPreviewView).

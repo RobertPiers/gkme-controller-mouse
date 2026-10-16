@@ -11,21 +11,21 @@ import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.Drawable
 
 /**
- * 给手柄图标着色，同时保留图标自身的明暗与透明度。
+ * 给Controller图标着色，同时保留图标自身的明暗与透明度。
  *
- * 图标在游戏内一律被视为绘制在黑色背景之上：
+ * 图标在游戏内一律被视为绘制在黑色Background之Up:
  * - 单色图标（形状本身只有一种亮度）用 [mono]，直接用所选颜色覆盖，源像素的透明度保持不变。
- * - 多明暗图标（如一体十字键、分享/触摸板网格图标的深色填充 + 灰色描边 + 半透明圆点）用
- *   [tint] 的 shaded 分支：先把图标合成到黑底上，再取合成后每个像素的亮度作为所选颜色的
+ * - 多明暗图标（如D-pad、Share/Touchpad网格图标的深色填充 + 灰色描边 + 半透明圆点）用
+ *   [tint] 的 shaded 分支: 先把图标合成到黑底Up，再取合成后每个像素的亮度作为所选颜色的
  *   透明度。这样深色填充更透明、浅色描边更不透明，且原本半透明的部分也会按比例混合透明度。
  */
 object IconTint {
 
-    /** 单色图标：输出所选颜色，源像素的透明度（抗锯齿 + 半透明）保持不变。 */
+    /** 单色图标: 输出所选颜色，源像素的透明度（抗锯齿 + 半透明）保持不变。 */
     fun mono(color: Int): ColorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
 
     /**
-     * 按图标类型着色。[shaded] 为 true 时用「黑底 + 亮度作透明度」保留多明暗层次，
+     * 按图标类型着色。[shaded] 为 true 时用「黑底 + 亮度作透明度”保留多明暗层次，
      * 否则用单色覆盖。
      */
     fun tint(icon: Drawable, color: Int, shaded: Boolean): Drawable =
@@ -33,7 +33,7 @@ object IconTint {
 }
 
 /**
- * 把 [inner] 先绘制到黑色背景上，再按每个像素的亮度给 [color] 赋透明度并缓存为位图。
+ * 把 [inner] 先绘制到黑色BackgroundUp，再按每个像素的亮度给 [color] 赋透明度并缓存为 bits图。
  * 由于半透明部分在与黑底合成时已按比例变暗，其透明度也会被正确保留。
  */
 private class ShadedIconDrawable(

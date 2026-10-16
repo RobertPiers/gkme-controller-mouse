@@ -1,7 +1,7 @@
 // GKME-Web — layout editor floating panel.
 //
 // Re-implements the UI of com.zyz4.gkme.view.FloatingEditorPanel: a draggable,
-// collapsible panel with 保存 / 放弃 / 添加 actions and a scrollable area of
+// collapsible panel with Save / Discard / Add actions and a scrollable area of
 // per-control parameters. Android-only features (gyro, global settings page,
 // sensitivity-curve editor) are intentionally omitted.
 
@@ -13,7 +13,7 @@ import {
   chineseNameFor, isButtonId, isSettingsId, DOUBLE_CLICK_IDS, JOYSTICK_IDS,
 } from "./controls.js";
 
-const KEYPAD_DEFAULT_TEXTS = ["上", "下", "左", "右", "中", "左上", "右上", "左下", "右下"];
+const KEYPAD_DEFAULT_TEXTS = ["Up", "Down", "Left", "Right", "Center", "Up-left", "Up-right", "Down-left", "Down-right"];
 
 function padTexts(b) {
   const t = b.keypadTexts && b.keypadTexts.length >= 5 ? b.keypadTexts.slice() : KEYPAD_DEFAULT_TEXTS.slice();
@@ -93,10 +93,10 @@ export class LayoutEditor {
       this.actions.appendChild(b);
       return b;
     };
-    this.btnSave = mk("保存", () => this._onSave());
-    this.btnDiscard = mk("放弃", () => this._onDiscard());
-    this.btnAdd = mk("+ 添加", () => this.app._showAddControl());
-    this.btnBack = mk("返回", () => this.setAdjusting(false));
+    this.btnSave = mk("Save", () => this._onSave());
+    this.btnDiscard = mk("Discard", () => this._onDiscard());
+    this.btnAdd = mk("+ Add", () => this.app._showAddControl());
+    this.btnBack = mk("Back", () => this.setAdjusting(false));
     this._updateActions();
   }
 
@@ -111,15 +111,15 @@ export class LayoutEditor {
   _onSave() {
     this.app._saveCurrentPreset();
     this.close();
-    this.app._toast("已保存布局");
+    this.app._toast("Layout saved");
   }
 
   async _onDiscard() {
     const layout = this.app.layout;
-    if (layout.hasUnsavedChanges() && !(await showConfirm("放弃修改", "确定放弃当前布局修改？"))) return;
+    if (layout.hasUnsavedChanges() && !(await showConfirm("Discard changes", "Discard changes to the current layout?"))) return;
     if (layout.hasUnsavedChanges()) layout.discardToSnapshot();
     this.close();
-    this.app._toast("已放弃修改");
+    this.app._toast("Changes discarded");
   }
 
   // ── collapse / drag ──
@@ -316,8 +316,8 @@ export class LayoutEditor {
       }
     }
     const row = this._btnRow([
-      ["添加", () => this._showOutputPicker(bits, (newBits) => onChanged(newBits))],
-      ["清空", () => onChanged([])],
+      ["Add", () => this._showOutputPicker(bits, (newBits) => onChanged(newBits))],
+      ["Clear", () => onChanged([])],
     ]);
     const wrap = el("div", {});
     wrap.append(box, row);
@@ -327,7 +327,7 @@ export class LayoutEditor {
   _showOutputPicker(currentBits, onResult) {
     const overlay = el("div", { class: "modal" });
     const box = el("div", { class: "modalbox" });
-    box.append(el("div", { class: "modaltitle", text: "映射键值" }));
+    box.append(el("div", { class: "modaltitle", text: "Button mapping" }));
     const grid = el("div", { class: "pickergrid" });
     const sel = new Set(currentBits || []);
     for (const group of OUTPUT_PICKER_GROUPS) {
@@ -342,7 +342,7 @@ export class LayoutEditor {
       }
     }
     box.append(grid);
-    const ok = el("button", { class: "modalclose", type: "button", text: "确定" });
+    const ok = el("button", { class: "modalclose", type: "button", text: "OK" });
     ok.addEventListener("click", () => { onResult(Array.from(sel)); overlay.remove(); });
     box.append(ok);
     overlay.append(box);
@@ -372,7 +372,7 @@ export class LayoutEditor {
     if (button.lockAspect) {
       const sizeMax = 40;
       const s = this._seek({
-        label: "大小",
+        label: "Size",
         value: button.w,
         min: 1,
         max: sizeMax,
@@ -384,7 +384,7 @@ export class LayoutEditor {
       const isSwapped = button.rotation === 90 || button.rotation === 270;
       const sizeMax = 120;
       const wSeek = this._seek({
-        label: "宽度",
+        label: "Width",
         value: isSwapped ? button.h : button.w,
         min: 1,
         max: sizeMax,
@@ -397,7 +397,7 @@ export class LayoutEditor {
         },
       });
       const hSeek = this._seek({
-        label: "高度",
+        label: "Height",
         value: isSwapped ? button.w : button.h,
         min: 1,
         max: sizeMax,
@@ -426,7 +426,7 @@ export class LayoutEditor {
           this._update(id, { rotation });
           this.showParams(this._current);
         });
-        const lab = el("div", { class: "editrotlabel", text: delta < 0 ? "逆时针" : "顺时针" });
+        const lab = el("div", { class: "editrotlabel", text: delta < 0 ? "Counterclockwise" : "Clockwise" });
         col.append(b, lab);
         return col;
       };
@@ -438,7 +438,7 @@ export class LayoutEditor {
     if (!isSettings) {
       this.params.append(
         this._seek({
-          label: "空闲时不透明度(%)",
+          label: "Idle opacity (%)",
           value: button.idleOpacity,
           min: 0,
           max: 100,
@@ -447,7 +447,7 @@ export class LayoutEditor {
       );
       this.params.append(
         this._seek({
-          label: "操作时不透明度(%)",
+          label: "Active opacity (%)",
           value: button.activeOpacity,
           min: 0,
           max: 100,
@@ -458,23 +458,23 @@ export class LayoutEditor {
 
     // ── Overlap trigger ──
     if (!isSettings) {
-      this.params.append(this._check("重叠区域触发", button.overlapTrigger, (v) => this._update(id, { overlapTrigger: v })));
+      this.params.append(this._check("Activate overlapping areas", button.overlapTrigger, (v) => this._update(id, { overlapTrigger: v })));
     }
 
     // ── Auto hold ──
     if ((isButtonId(id) || getControl(id)?.isKeyboard) && !isSettings) {
-      this.params.append(this._check("自动保持", button.autoHold, (v) => this._update(id, { autoHold: v })));
+      this.params.append(this._check("Auto-hold", button.autoHold, (v) => this._update(id, { autoHold: v })));
     }
 
     // ── Double click ──
     if (DOUBLE_CLICK_IDS.has(base)) {
-      this.params.append(this._check("双击按下", button.doubleClickEnable, (v) => this._update(id, { doubleClickEnable: v })));
+      this.params.append(this._check("Double-tap press", button.doubleClickEnable, (v) => this._update(id, { doubleClickEnable: v })));
     }
 
     // ── Follow area ──
     if (base === "touchpad") {
       this.params.append(
-        this._check("扩展触摸范围", button.followAreaEnabled, (checked) => {
+        this._check("Extend touch area", button.followAreaEnabled, (checked) => {
           const cur = this._current;
           let props;
           if (checked) {
@@ -494,10 +494,10 @@ export class LayoutEditor {
           this.showParams(this._current);
         })
       );
-      if (button.followAreaEnabled) this.params.append(this._btnRow([["进入调节", () => this.setAdjusting(true)]]));
+      if (button.followAreaEnabled) this.params.append(this._btnRow([["Adjust", () => this.setAdjusting(true)]]));
     } else if (JOYSTICK_IDS.has(base) || base === "dpadPad" || isKeypadId(id)) {
       this.params.append(
-        this._check("矩形区域内跟随", button.followAreaEnabled, (checked) => {
+        this._check("Follow within rectangular area", button.followAreaEnabled, (checked) => {
           const cur = this._current;
           const props =
             checked && (cur.followAreaW === 0 || cur.followAreaH === 0)
@@ -507,14 +507,14 @@ export class LayoutEditor {
           this.showParams(this._current);
         })
       );
-      if (button.followAreaEnabled) this.params.append(this._btnRow([["进入调节", () => this.setAdjusting(true)]]));
+      if (button.followAreaEnabled) this.params.append(this._btnRow([["Adjust", () => this.setAdjusting(true)]]));
     }
 
     // ── Joystick tuning ──
     if (JOYSTICK_IDS.has(base)) {
       this.params.append(
         this._seek({
-          label: "灵敏度(%)",
+          label: "Sensitivity (%)",
           value: button.joystickSensitivity,
           min: 10,
           max: 300,
@@ -523,7 +523,7 @@ export class LayoutEditor {
       );
       this.params.append(
         this._seek({
-          label: "死区(%)",
+          label: "Deadzone (%)",
           value: button.deadZone,
           min: 0,
           max: 100,
@@ -532,15 +532,15 @@ export class LayoutEditor {
       );
       this.params.append(
         this._seek({
-          label: "反死区(%)",
+          label: "Anti-deadzone (%)",
           value: button.reverseDeadZone,
           min: 0,
           max: 100,
           onChange: (v) => this._update(id, { reverseDeadZone: v }),
         }).el
       );
-      this.params.append(this._check("触摸板模式", button.touchpadMode, (v) => this._update(id, { touchpadMode: v })));
-      this.params.append(this._check("快速响应模式", button.prediction, (v) => this._update(id, { prediction: v })));
+      this.params.append(this._check("Touchpad mode", button.touchpadMode, (v) => this._update(id, { touchpadMode: v })));
+      this.params.append(this._check("Fast response mode", button.prediction, (v) => this._update(id, { prediction: v })));
     }
 
     // ── Keypad ──
@@ -560,14 +560,14 @@ export class LayoutEditor {
 
     // ── Delete ──
     if (!isSettings) {
-      this.params.append(this._btnRow([["删除", () => this._delete()]]));
+      this.params.append(this._btnRow([["Delete", () => this._delete()]]));
     }
   }
 
   async _delete() {
     const id = this._current && this._current.id;
     if (!id) return;
-    if (!(await showConfirm("删除控件", "确定删除该控件？", { positiveText: "删除" }))) return;
+    if (!(await showConfirm("Delete control", "Delete this control?", { positiveText: "Delete" }))) return;
     const layout = this.app.layout;
     layout.buttons = layout.buttons.filter((b) => b.id !== id);
     layout.selectedId = null;
@@ -582,7 +582,7 @@ export class LayoutEditor {
     const maxH = Math.max(40, button.followAreaH);
     this.params.append(
       this._seek({
-        label: "区域宽度",
+        label: "Area width",
         value: button.followAreaW,
         min: 1,
         max: maxW,
@@ -591,7 +591,7 @@ export class LayoutEditor {
     );
     this.params.append(
       this._seek({
-        label: "区域高度",
+        label: "Area height",
         value: button.followAreaH,
         min: 1,
         max: maxH,
@@ -600,7 +600,7 @@ export class LayoutEditor {
     );
     this.params.append(
       this._seek({
-        label: "矩形区域不透明度(%)",
+        label: "Rectangular area opacity (%)",
         value: button.followAreaOpacity,
         min: 0,
         max: 100,
@@ -609,7 +609,7 @@ export class LayoutEditor {
     );
     if (baseId(id) !== "touchpad") {
       this.params.append(
-        this._check("触发矩形区域重叠触发", button.followAreaOverlapTrigger, (v) => this._update(id, { followAreaOverlapTrigger: v }))
+        this._check("Activate overlapping rectangular areas", button.followAreaOverlapTrigger, (v) => this._update(id, { followAreaOverlapTrigger: v }))
       );
     }
   }
@@ -620,24 +620,24 @@ export class LayoutEditor {
     const bits = padBits(button);
 
     this.params.append(
-      this._spinner("方向模式", [["4", "4方向"], ["8", "8方向"]], button.keypadEightWay ? "8" : "4", (v) => {
+      this._spinner("Direction mode", [["4", "4-way"], ["8", "8-way"]], button.keypadEightWay ? "8" : "4", (v) => {
         const eight = v === "8";
         this._update(id, { keypadEightWay: eight });
         this.showParams(this._current);
       })
     );
     this.params.append(
-      this._spinner("中心形状", [["SQUARE", "方形"], ["CIRCLE", "圆形"]], button.centerShape || "SQUARE", (v) => {
+      this._spinner("Center shape", [["SQUARE", "Square"], ["CIRCLE", "Circle"]], button.centerShape || "SQUARE", (v) => {
         this._update(id, { centerShape: v });
         this.showParams(this._current);
       })
     );
 
     const dirs = [
-      ["上方向", 0], ["下方向", 1], ["左方向", 2], ["右方向", 3],
+      ["Up direction", 0], ["Down direction", 1], ["Left direction", 2], ["Right direction", 3],
     ];
-    if (button.keypadEightWay) dirs.push(["左上方向", 5], ["右上方向", 6], ["左下方向", 7], ["右下方向", 8]);
-    dirs.push(["双击中心", 4]);
+    if (button.keypadEightWay) dirs.push(["Up-left direction", 5], ["Up-right direction", 6], ["Down-left direction", 7], ["Down-right direction", 8]);
+    dirs.push(["Double-tap center", 4]);
 
     for (const [name, idx] of dirs) {
       this.params.append(this._section(name));
@@ -676,7 +676,7 @@ export class LayoutEditor {
     const isTrigger = base === "btnLT" || base === "btnRT";
 
     this.params.append(
-      this._check("滑动触发", button.swipeTrigger && !button.linearTriggerEnabled, (v) => {
+      this._check("Swipe activation", button.swipeTrigger && !button.linearTriggerEnabled, (v) => {
         this._update(id, { swipeTrigger: v, ...(isTrigger ? { linearTriggerEnabled: false } : {}) });
         this.showParams(this._current);
       })
@@ -684,29 +684,29 @@ export class LayoutEditor {
 
     if (isTrigger) {
       this.params.append(
-        this._check("模拟线性扳机", button.linearTriggerEnabled, (v) => {
+        this._check("Emulate linear trigger", button.linearTriggerEnabled, (v) => {
           this._update(id, { linearTriggerEnabled: v, swipeTrigger: v ? false : button.swipeTrigger });
           this.showParams(this._current);
         })
       );
       if (button.linearTriggerEnabled) {
         const dirOptions = [
-          ["DOWN", "向下"], ["UP", "向上"], ["LEFT", "向左"], ["RIGHT", "向右"],
+          ["DOWN", "Down"], ["UP", "Up"], ["LEFT", "Left"], ["RIGHT", "Right"],
         ];
         this.params.append(
-          this._spinner("滑动方向", dirOptions, button.slideDirection || "DOWN", (v) => this._update(id, { slideDirection: v }))
+          this._spinner("Swipe direction", dirOptions, button.slideDirection || "DOWN", (v) => this._update(id, { slideDirection: v }))
         );
-        this.params.append(this._section("扳机行程"));
+        this.params.append(this._section("Trigger travel"));
         this.params.append(
           this._seek({
-            label: "行程",
+            label: "Travel",
             value: button.travelDistance,
             min: 1,
             max: 40,
             onChange: (v) => this._update(id, { travelDistance: v }),
           }).el
         );
-        this.params.append(this._check("快速响应模式", button.prediction, (v) => this._update(id, { prediction: v })));
+        this.params.append(this._check("Fast response mode", button.prediction, (v) => this._update(id, { prediction: v })));
       }
     }
   }
@@ -714,9 +714,9 @@ export class LayoutEditor {
   _buildCustomParams(button) {
     const id = button.id;
     this.params.append(
-      this._text("显示文本", button.customText || "自定义", (v) => this._update(id, { customText: v || "自定义" }))
+      this._text("Display text", button.customText || "Custom", (v) => this._update(id, { customText: v || "Custom" }))
     );
-    this.params.append(el("div", { class: "editseclabel", text: "映射键值" }));
+    this.params.append(el("div", { class: "editseclabel", text: "Button mapping" }));
     this.params.append(
       this._bitsEditor((button.customBits || []).slice(), (newBits) => {
         this._update(id, { customBits: newBits });

@@ -28,8 +28,8 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * 被控端主机：监听 GKME 协议，发现控制端设备，接收 [GamepadInput] 并通过 Shizuku
- * 注入到本地 uinput 虚拟手柄。行为对齐 GKME-Windows 的主机端。
+ * Host主机: 监听 GKME 协议，发现控制端设备，接收 [GamepadInput] 并通过 Shizuku
+ * 注入到本地 uinput 虚拟Controller。行为对齐 GKME-Windows 的主机端。
  */
 object ControlledHostManager {
 
@@ -50,7 +50,7 @@ object ControlledHostManager {
 
     enum class Phase { IDLE, STARTING, LISTENING, CONNECTING, CONNECTED, RECONNECTING, ERROR }
 
-    data class HostState(val phase: Phase = Phase.IDLE, val statusText: String = "未启动")
+    data class HostState(val phase: Phase = Phase.IDLE, val statusText: String = "Not started")
 
     private val _devices = MutableStateFlow<List<ControlledDeviceCard>>(emptyList())
     val devices: StateFlow<List<ControlledDeviceCard>> = _devices.asStateFlow()
@@ -61,7 +61,7 @@ object ControlledHostManager {
     private val _session = MutableStateFlow<ControlledDevice?>(null)
     val session: StateFlow<ControlledDevice?> = _session.asStateFlow()
 
-    /** 正在尝试连接的端点 IP（尚未建立会话），供合并卡片显示“连接中…”。 */
+    /** 正在Try connecting的端点 IP（尚未建立会话），供合并卡片Display“Connecting…”。 */
     private val _connectingIp = MutableStateFlow<String?>(null)
     val connectingIp: StateFlow<String?> = _connectingIp.asStateFlow()
 
@@ -81,16 +81,16 @@ object ControlledHostManager {
     @Volatile
     private var active: ControlledDevice? = null
 
-    /** 当前会话的下行动作发送器：UDP 会话发往控制端 IP，Web 会话发往对应浏览器。 */
+    /** 当前会话的Down行动作发送器: UDP 会话发往Controller IP，Web 会话发往对应浏览器。 */
     @Volatile
     private var activeDownlink: ((Byte, ByteArray) -> Unit)? = null
 
     /** 最近一次收到 active 控制端的包（Hello 或 GamepadInput）的时间。
-     *  与电脑端 GamepadSession._lastReceiveTime 一致，两类包都会刷新。 */
+     *  与电脑端 GamepadSession._lastReceiveTime 一致，两类包都会Refresh。 */
     @Volatile
     private var lastReceiveAt = 0L
 
-    /** 输入超时后进入的“重连中”状态：保留会话与 active，等待控制端重新握手。
+    /** 输入超时后Enter的“重连Center”Status: 保留会话与 active，等待控制端重新握手。
      *  对齐电脑端 GamepadSession 的 watchdog 行为（超时不销毁会话）。 */
     @Volatile
     private var reconnecting = false
@@ -107,18 +107,18 @@ object ControlledHostManager {
         running = true
         val s = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         scope = s
-        _state.value = HostState(Phase.STARTING, "正在启动服务…")
+        _state.value = HostState(Phase.STARTING, "Starting service…")
         bindSockets()
         if (sockets.isEmpty()) {
             _state.value = HostState(
                 Phase.ERROR,
-                if (portInUse) "端口 $PORT 被占用，可能已有服务在运行" else "无法获取本机 IP",
+                if (portInUse) "Port $PORT is already in use; a service may already be running" else "Cannot get local IP address",
             )
             running = false
             scope = null
             return
         }
-        _state.value = HostState(Phase.LISTENING, "正在扫描…")
+        _state.value = HostState(Phase.LISTENING, "Scanning…")
         jobs += s.launch { pruneLoop() }
         jobs += s.launch { watchdogLoop() }
         updateShizukuStatus()
@@ -151,7 +151,7 @@ object ControlledHostManager {
         scope = null
         deviceMap.clear()
         _devices.value = emptyList()
-        _state.value = HostState(Phase.IDLE, "未启动")
+        _state.value = HostState(Phase.IDLE, "Not started")
     }
 
     fun isRunning(): Boolean = running
@@ -162,7 +162,7 @@ object ControlledHostManager {
         deviceMap.keys.retainAll { it == activeIp }
         publish()
         if (active == null) {
-            _state.value = HostState(Phase.LISTENING, "正在扫描…")
+            _state.value = HostState(Phase.LISTENING, "Scanning…")
         }
     }
 
@@ -174,12 +174,12 @@ object ControlledHostManager {
                 if (active != null) disconnectInternal(null)
                 _connectingIp.value = device.ip
                 reconnecting = false
-                _state.value = HostState(Phase.CONNECTING, "正在连接到 ${device.ip}…")
+                _state.value = HostState(Phase.CONNECTING, "Connecting to ${device.ip}…")
                 val ready = awaitInjectorReady(8_000)
                 if (!ready) {
                     _state.value = HostState(
                         Phase.ERROR,
-                        "连接失败: ${device.ip}（${GamepadInjector.statusText()}）",
+                        "Connection failed: ${device.ip}（${GamepadInjector.statusText()}）",
                     )
                     return@launch
                 }
@@ -190,7 +190,7 @@ object ControlledHostManager {
                 deviceMap[device.ip] = device
                 sendServerHello()
                 startRumblePump(device)
-                _state.value = HostState(Phase.CONNECTED, "已连接: ${device.ip}")
+                _state.value = HostState(Phase.CONNECTED, "Connected: ${device.ip}")
             } finally {
                 if (_connectingIp.value == device.ip) _connectingIp.value = null
                 publish()
@@ -202,22 +202,22 @@ object ControlledHostManager {
         if (!running) return
         val ip = rawIp.trim()
         if (ip.isEmpty() || !isValidIp(ip)) {
-            _state.value = HostState(_state.value.phase, "IP 地址格式无效")
+            _state.value = HostState(_state.value.phase, "Invalid IP address")
             return
         }
         val device = deviceMap[ip] ?: ControlledDevice(ip = ip)
         connect(device)
     }
 
-    /** 接纳一个浏览器控制端：登记为可发现设备，供界面展示卡片。 */
+    /** 接纳一个浏览器控制端: 登记为可发现设备，供界面展示卡片。 */
     fun onWebClientConnected(device: ControlledDevice) {
         deviceMap[device.ip] = device
         publish()
     }
 
     /**
-     * 浏览器控制端接入后自动建立会话（对齐电脑端 `NetworkService.ConnectWebAsync`）：
-     * 与 UDP 连接流程一致，但下行发送器为对应的 WebSocket 连接。
+     * 浏览器控制端接入后自动建立会话（对齐电脑端 `NetworkService.ConnectWebAsync`）:
+     * 与 UDP Connect流程一致，但Down行发送器为对应的 WebSocket Connect。
      */
     fun connectWeb(device: ControlledDevice, sender: (Byte, ByteArray) -> Unit) {
         val s = scope ?: return
@@ -227,12 +227,12 @@ object ControlledHostManager {
                 if (active != null) disconnectInternal(null)
                 _connectingIp.value = device.ip
                 reconnecting = false
-                _state.value = HostState(Phase.CONNECTING, "正在连接: ${device.displayName}…")
+                _state.value = HostState(Phase.CONNECTING, "Connecting: ${device.displayName}…")
                 val ready = awaitInjectorReady(8_000)
                 if (!ready) {
                     _state.value = HostState(
                         Phase.ERROR,
-                        "连接失败: ${device.displayName}（${GamepadInjector.statusText()}）",
+                        "Connection failed: ${device.displayName}（${GamepadInjector.statusText()}）",
                     )
                     return@launch
                 }
@@ -243,7 +243,7 @@ object ControlledHostManager {
                 deviceMap[device.ip] = device
                 sendServerHello()
                 startRumblePump(device)
-                _state.value = HostState(Phase.CONNECTED, "已连接: ${device.displayName}")
+                _state.value = HostState(Phase.CONNECTED, "Connected: ${device.displayName}")
             } finally {
                 if (_connectingIp.value == device.ip) _connectingIp.value = null
                 publish()
@@ -251,7 +251,7 @@ object ControlledHostManager {
         }
     }
 
-    /** 处理浏览器上行帧（[TYPE_CLIENT_TO_SERVER] / [TYPE_GAMEPAD_INPUT]）。 */
+    /** 处理浏览器Up行帧（[TYPE_CLIENT_TO_SERVER] / [TYPE_GAMEPAD_INPUT]）。 */
     fun onWebFrame(device: ControlledDevice, type: Byte, payload: ByteArray) {
         when (type) {
             TYPE_CLIENT_TO_SERVER -> handleClientToServer(device.ip, payload)
@@ -259,7 +259,7 @@ object ControlledHostManager {
         }
     }
 
-    /** 浏览器断开：结束会话并移除卡片。 */
+    /** 浏览器Disconnect: 结束会话并移除卡片。 */
     fun onWebClientClosed(device: ControlledDevice) {
         if (active?.groupKey == device.groupKey) {
             connectJob?.cancel()
@@ -273,7 +273,7 @@ object ControlledHostManager {
     fun disconnect() {
         connectJob?.cancel()
         connectJob = null
-        scope?.launch { disconnectInternal("已断开") }
+        scope?.launch { disconnectInternal("Disconnected") }
     }
 
     fun updateShizukuStatus() {
@@ -379,10 +379,10 @@ object ControlledHostManager {
             lastSeen = System.currentTimeMillis(),
         )
         if (active == null && existing == null) {
-            _state.value = HostState(Phase.LISTENING, "发现设备: $srcIp")
+            _state.value = HostState(Phase.LISTENING, "Device found: $srcIp")
         }
         // 控制端在重连时会恢复广播（ConnectionManager.startAutoReconnect），此时
-        // 重新下发 ServerHello 让它完成握手。对齐电脑端 HandleDiscovery 的行为。
+        // 重新Down发 ServerHello 让它完成握手。对齐电脑端 HandleDiscovery 的行为。
         val current = active
         if (current != null && current.ip == srcIp) {
             sendServerHello()
@@ -410,7 +410,7 @@ object ControlledHostManager {
                 active = updated
                 _session.value = updated
                 lastReceiveAt = System.currentTimeMillis()
-                // 收到 Hello 说明控制端已在（重新）握手：重建虚拟手柄并回 ServerHello
+                // 收到 Hello 说明控制端已在（重新）握手: 重建虚拟Controller并回 ServerHello
                 // 让它完成握手。对齐电脑端 GamepadSession.HandleHello。
                 recoverFromReconnect(srcIp)
             }
@@ -420,8 +420,8 @@ object ControlledHostManager {
     }
 
     /**
-     * 控制端重新握手（收到 Hello / 重连广播）时，重建被超时释放的虚拟手柄并回
-     * ServerHello。电脑端在同一路径上由 [GamepadSession.HandleHello] 重建控制器。
+     * 控制端重新握手（收到 Hello / 重连广播）时，重建被超时释放的虚拟Controller并回
+     * ServerHello。电脑端在同一路径Up由 [GamepadSession.HandleHello] 重建控制器。
      */
     private fun recoverFromReconnect(srcIp: String) {
         if (recovering) return
@@ -437,7 +437,7 @@ object ControlledHostManager {
                     sendServerHello()
                     val dev = active ?: return@launch
                     startRumblePump(dev)
-                    _state.value = HostState(Phase.CONNECTED, "已连接: $srcIp")
+                    _state.value = HostState(Phase.CONNECTED, "Connected: $srcIp")
                 } else {
                     _state.value = HostState(Phase.RECONNECTING, GamepadInjector.statusText())
                 }
@@ -453,7 +453,7 @@ object ControlledHostManager {
         try {
             val input = GamepadInput.parseFrom(payload)
             lastReceiveAt = System.currentTimeMillis()
-            // 手柄尚未就绪（重连中/超时释放后）：只刷新保活时间，等待控制端的
+            // Controller尚未就绪（重连Center/超时释放后）: 只Refresh保活时间，等待控制端的
             // Hello 重新握手。对齐电脑端 ReportGamepadInput 的 !IsReady 分支。
             if (reconnecting || !GamepadInjector.isReady()) return
             GamepadInjector.update(input)
@@ -491,9 +491,9 @@ object ControlledHostManager {
         }
         GamepadInjector.release()
         _state.value = if (running) {
-            HostState(Phase.LISTENING, reason ?: "已断开")
+            HostState(Phase.LISTENING, reason ?: "Disconnected")
         } else {
-            HostState(Phase.IDLE, "未启动")
+            HostState(Phase.IDLE, "Not started")
         }
     }
 
@@ -510,7 +510,7 @@ object ControlledHostManager {
                 }
             }
             if (changed) publish()
-            // 手柄用户服务未连上时兜底重试，保证长时间连接失败也能触发状态提示。
+            // Controller用户服务未连Up时兜底重试，保证长时间Connect失败也能触发Status提示。
             GamepadInjector.ensureBound()
             _shizukuStatus.value = GamepadInjector.statusText()
             delay(1000.milliseconds)
@@ -523,12 +523,12 @@ object ControlledHostManager {
             if (current != null && !reconnecting &&
                 System.currentTimeMillis() - lastReceiveAt > INPUT_TIMEOUT_MS
             ) {
-                // 输入超时：释放虚拟手柄避免按键卡住，但保留会话与 active，等待
+                // 输入超时: 释放虚拟Controller避免按键卡住，但保留会话与 active，等待
                 // 控制端自动重连再次握手（收到 Hello 后重建）。对齐电脑端
-                // GamepadSession.WatchdogLoop：超时只重置控制器，不销毁会话。
+                // GamepadSession.WatchdogLoop: 超时只Reset控制器，不销毁会话。
                 reconnecting = true
                 GamepadInjector.release()
-                _state.value = HostState(Phase.RECONNECTING, "连接丢失: ${current.ip}")
+                _state.value = HostState(Phase.RECONNECTING, "Connection lost: ${current.ip}")
             }
             delay(500.milliseconds)
         }
@@ -542,11 +542,11 @@ object ControlledHostManager {
             var lastSendAt = 0L
             while (isActive) {
                 val now = System.currentTimeMillis()
-                // 重连中/手柄未就绪时不下发保活包，让控制端的 3s 看门狗触发自动
+                // 重连Center/Controller未就绪时不Down发保活包，让控制端的 3s 看门狗触发自动
                 // 重连并重新握手（电脑端 ReportLoop 也只在控制器存在时才发包）。
                 if (!reconnecting && GamepadInjector.isReady()) {
                     val packed = GamepadInjector.pumpRumble()
-                    // 震动变化时立即下发；否则每 500ms 发一次作为保活，避免控制端 3s 无包判定掉线。
+                    // Vibration变化时立即Down发；否则每 500ms 发一次作为保活，避免控制端 3s None包判定掉线。
                     if (packed != last || now - lastSendAt >= 500) {
                         last = packed
                         lastSendAt = now

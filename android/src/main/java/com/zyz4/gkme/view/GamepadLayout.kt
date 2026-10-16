@@ -1269,8 +1269,8 @@ class GamepadLayout @JvmOverloads constructor(
             // Content text cap
             val capPx = AppearanceApplier.contentCapPx(child, appearanceSettings)
             if (child is Button && !child.text.isNullOrEmpty()) {
-                // 自适应文本上限按控件自身尺寸收敛：文本不可能超过控件最大边，用控件尺寸
-                // 作为上限可把 autosize 的候选尺寸数组从 8192 项缩到实际尺寸量级，避免
+                // 自适应文本Up限按控件自身尺寸收敛: 文本不可能超过控件最大边，用控件尺寸
+                // 作为Up限可把 autosize 的候选尺寸数组从 8192 项缩到实际尺寸量级，避免
                 // onMeasure 里逐像素测量文本造成启动卡顿。
                 val maxDim = maxOf(child.width, child.height).coerceAtLeast(1)
                 val effectiveCap = capPx?.let { minOf(it, maxDim) } ?: maxDim

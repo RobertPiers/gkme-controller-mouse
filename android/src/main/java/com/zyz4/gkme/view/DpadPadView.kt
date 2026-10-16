@@ -59,10 +59,10 @@ class DpadPadView @JvmOverloads constructor(
     /** Adaptive arrow-size cap in px (from the global icon-size setting); null = sized relative to the region. */
     var arrowMaxSizePx: Float? = null
 
-    /** 方向箭头图标颜色。 */
+    /** 方向箭头Icon color。 */
     var appearanceArrowColor: Int = 0xFFCCCCCC.toInt()
 
-    /** 中心形状。CIRCLE 时中心为内切圆，周围 8 个方向改为径向扇环（绘制与判定一致）。 */
+    /** Center shape。CIRCLE 时Center心为内切圆，周围 8 个方向改为径向扇环（绘制与判定一致）。 */
     var centerShape: CenterShape = CenterShape.SQUARE
         set(value) {
             if (field != value) {
@@ -95,11 +95,11 @@ class DpadPadView @JvmOverloads constructor(
     private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
     private val shapePath = Path()
 
-    /** 圆形模式下 8 个径向扇环的路径，索引 = 扇区序号（0=右，顺时针每 45°）。 */
+    /** Circle模式Down 8 个径向扇环的路径，索引 = 扇区序号（0=Right，Clockwise每 45°）。 */
     private val sectorPaths = Array(8) { Path() }
     private var centerRadius = 0f
 
-    /** 扇区序号 → D-pad 位（0=右，顺时针每 45°）。 */
+    /** 扇区序号 → D-pad  bits（0=Right，Clockwise每 45°）。 */
     private val sectorBits = intArrayOf(
         GamepadState.DPAD_RIGHT,
         GamepadState.DPAD_DOWN or GamepadState.DPAD_RIGHT,
@@ -214,7 +214,7 @@ class DpadPadView @JvmOverloads constructor(
                 canvas.drawLine(originX, originY + a, originX + side, originY + a, borderPaint)
                 canvas.drawLine(originX, originY + 2f * a, originX + side, originY + 2f * a, borderPaint)
             } else {
-                // 中心圆 + 8 条扇区分隔线（中心圆边缘 → 外圆）
+                // Center心圆 + 8 条扇区分隔线（Center心圆边缘 → 外圆）
                 canvas.drawCircle(centerX, centerY, centerRadius, borderPaint)
                 val r = side / 2f
                 for (i in 0 until 8) {
@@ -234,7 +234,7 @@ class DpadPadView @JvmOverloads constructor(
         canvas.restore()
     }
 
-    /** 圆形模式下，把四个方向箭头放在对应扇环的中间半径处。 */
+    /** Circle模式Down，把四个方向箭头放在对应扇环的Center间半径处。 */
     private fun drawCircleArrows(canvas: Canvas, a: Float) {
         val r = side / 2f
         val ringR = centerRadius + (r - centerRadius) * 0.55f
@@ -296,7 +296,7 @@ class DpadPadView @JvmOverloads constructor(
         return p
     }
 
-    /** 扇区序号（0=右，顺时针每 45°）对应的 D-pad 位；与 SECTOR_BITS 互为逆映射。 */
+    /** 扇区序号（0=Right，Clockwise每 45°）对应的 D-pad  bits；与 SECTOR_BITS 互为逆映射。 */
     private fun sectorIndexForBits(bits: Int): Int = when (bits) {
         GamepadState.DPAD_RIGHT -> 0
         (GamepadState.DPAD_DOWN or GamepadState.DPAD_RIGHT) -> 1
@@ -331,7 +331,7 @@ class DpadPadView @JvmOverloads constructor(
         return bitsAt(col, row)
     }
 
-    /** 圆形模式：中心圆内返回 0，圆外/环内按极角落入 8 个扇区之一。 */
+    /** Circle模式: Center心圆内Back 0，圆外/环内按极角落入 8 个扇区之一。 */
     private fun regionAtCircle(x: Float, y: Float): Int {
         val dx = x - effectiveCenterX
         val dy = y - effectiveCenterY

@@ -120,7 +120,7 @@ public class ProConController extends AbstractController {
         return connection.bulkTransfer(outEndpt, data, size, 100) == size;
     }
 
-    /** 原子地取下一个 0..0xF 的报文计数器。 */
+    /** 原子地取Down一个 0..0xF 的报文计数器。 */
     private byte nextCounter() {
         synchronized (outputLock) {
             byte c = sendPacketCount++;

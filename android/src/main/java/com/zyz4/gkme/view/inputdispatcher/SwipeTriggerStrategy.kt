@@ -40,7 +40,7 @@ object SwipeTriggerStrategy {
                 if (pointer.x >= rect.left && pointer.x <= rect.right &&
                     pointer.y >= rect.top && pointer.y <= rect.bottom) {
                     // 非 overlapTrigger 的重叠过滤由调用方在传入 childBounds 前
-                    // 完成，本纯函数只负责命中判断。
+                    // 完成，本纯函数只负责命Center判断。
                     newlyActive.add(pos.id)
                     break
                 }

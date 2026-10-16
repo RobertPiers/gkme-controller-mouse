@@ -17,8 +17,8 @@ import javax.inject.Singleton
 private val Context.controlledModeDataStore by preferencesDataStore(name = "controlled_device_modes")
 
 /**
- * 被控端页面按物理设备（MAC，未知时退回 IP）记录各自模拟的手柄类型，
- * 行为对齐 GKME-Windows 的 DeviceModeStore：同一台控制端重连后沿用上次选择。
+ * Host页面按物理设备（MAC，未知时退回 IP）记录各自模拟的Controller类型，
+ * 行为对齐 GKME-Windows 的 DeviceModeStore: 同一台控制端重连后沿用Up次Select。
  */
 @Singleton
 class ControlledDeviceModeRepository @Inject constructor(

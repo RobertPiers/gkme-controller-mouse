@@ -36,11 +36,11 @@ internal fun MainActivity.observeState() {
                     if (a.settingsInflated) {
                         a.findViewById<TextView>(R.id.tvConnectionStatus).text = st.statusText
                         val btn = a.findViewById<Button>(R.id.btnConnectAction)
-                        btn.text = if (st.phase != ConnectionPhase.IDLE) "停止服务" else "启动服务"
+                        btn.text = if (st.phase != ConnectionPhase.IDLE) "Stop service" else "Start service"
                         val ip = if (a.viewModel.settings.value.connectionMode == ConnectionMode.WIFI &&
-                            st.statusText != "未启动"
+                            st.statusText != "Not started"
                         ) {
-                            "本机 IP: ${a.viewModel.getServerIp()}"
+                            "Local IP: ${a.viewModel.getServerIp()}"
                         } else ""
                         a.findViewById<TextView>(R.id.tvServerIp).text = ip
                     }
@@ -131,11 +131,11 @@ internal fun MainActivity.observeState() {
             launch {
                 var appliedOnce = false
                 a.viewModel.currentPreset.collect { preset ->
-                    // 初始 currentPreset 是空布局，应用它只会在默认位置闪出一个设置按钮，
-                    // 故跳过第一次空布局；之后（含用户主动使用的空布局）都正常渲染。
-                    // 这里不能再依赖 settingsLoaded：StateFlow 在生命周期切换期间会合并只投递
-                    // 最新值，若投递真实布局时 settingsLoaded 恰好仍为 false，真实布局会被丢弃，
-                    // 导致偶发启动后手柄空白。
+                    // 初始 currentPreset 是空Layout，应用它只会在默认 bits置闪出一个Settings button，
+                    // 故跳过第一次空Layout；之后（含用户主动使用的空Layout）都正常渲染。
+                    // 这里不能再依赖 settingsLoaded: StateFlow 在生命周期切换期间会合并只投递
+                    // 最新值，若投递真实Layout时 settingsLoaded 恰好仍为 false，真实Layout会被丢弃，
+                    // 导致偶发启动后Controller空白。
                     if (!appliedOnce && preset.buttons.isEmpty()) return@collect
                     appliedOnce = true
                     a.viewModel.applyLayoutGyroSettings(preset)
@@ -154,14 +154,14 @@ internal fun MainActivity.observeState() {
             }
             launch {
                 a.viewModel.ledState.collect { led ->
-                    // 透传 PC 端模拟手柄的 LED 颜色与玩家指示灯到实体手柄
+                    // 透传 PC 端模拟Controller的 LED 颜色与玩家指示灯到Physical controller
                     a.physicalControllerHandler.setLedColor(led.color, led.playerLed)
-                    // 外观颜色绑定到 LED 时实时更新
+                    // Appearance颜色绑定到 LED 时实时更新
                     a.viewModel.applyLedColorToAppearance(led.color)
                     if (a.settingsInflated) a.syncAppearanceUI()
                 }
             }
-            // 启动时立即同步一次LED状态
+            // 启动时立即同步一次LEDStatus
             val initialLed = a.viewModel.ledState.value
             a.physicalControllerHandler.setLedColor(initialLed.color, initialLed.playerLed)
             launch {
@@ -216,7 +216,7 @@ internal fun MainActivity.observeState() {
                         a.layoutGlobalSettingsPanel?.refreshCurrentTab()
                     }
                     a.syncPhysicalControllerState()
-                    // 手柄连接时重新应用当前LED状态
+                    // ControllerConnect时重新应用当前LEDStatus
                     val led = a.viewModel.ledState.value
                     a.physicalControllerHandler.setLedColor(led.color, led.playerLed)
                 }

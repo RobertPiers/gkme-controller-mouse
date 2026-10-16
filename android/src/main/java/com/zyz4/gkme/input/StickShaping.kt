@@ -42,7 +42,7 @@ object StickShaping {
         val normalized = (mag / fullScale).coerceIn(0f, 1f)
         val dz = (deadZone / 100f).coerceIn(0f, 0.99f)
         val rdz = (reverseDeadZone / 100f).coerceIn(0f, 0.99f)
-        // 死区优先：死区内恒输出 0，反死区只在死区之外抬升下限。
+        // 死区优先: 死区内恒输出 0，反死区只在死区之外抬升Down限。
         val afterDeadZone = if (normalized <= dz) 0f else (normalized - dz) / (1f - dz)
         val afterReverseDeadZone = if (afterDeadZone == 0f) 0f else afterDeadZone * (1f - rdz) + rdz
         val shaped = SensitivityCurve.evaluate(curve, afterReverseDeadZone)

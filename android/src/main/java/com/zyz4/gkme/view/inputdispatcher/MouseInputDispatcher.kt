@@ -23,8 +23,8 @@ object MouseInputDispatcher {
         var dragging: Boolean = false,
         var dragButton: Byte = 0,       // 1=left, 2=right, 4=middle, 0=none
         val tapInfo: Map<Int, TapInfo> = emptyMap(),
-        val wheelAccumX: Float = 0f,    // 横向滚轮小数累积（平滑滚动用）
-        val wheelAccumY: Float = 0f,    // 纵向滚轮小数累积（平滑滚动用）
+        val wheelAccumX: Float = 0f,    // 横向滚轮小数累积（平滑Scroll用）
+        val wheelAccumY: Float = 0f,    // 纵向滚轮小数累积（平滑Scroll用）
     )
 
     /** Track a finger's state: is it tapping (single tap not yet resolved)? */

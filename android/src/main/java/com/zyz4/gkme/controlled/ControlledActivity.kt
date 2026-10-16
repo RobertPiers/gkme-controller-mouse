@@ -40,9 +40,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * “作为被控端”的连接页面：布局与操作逻辑参考 GKME-Windows 主机端
- * （手动输入 IP、刷新、关于、设备列表、连接/断开），并在本地通过 Shizuku
- * 创建 uinput 虚拟手柄。
+ * “Host mode”的Connect页面: Layout与操作逻辑参考 GKME-Windows 主机端
+ * （手动输入 IP、Refresh、About、Device list、Connect/Disconnect），并在本地通过 Shizuku
+ * Create uinput 虚拟Controller。
  */
 @AndroidEntryPoint
 class ControlledActivity : ComponentActivity() {
@@ -63,10 +63,10 @@ class ControlledActivity : ComponentActivity() {
     private lateinit var ivWebQr: ImageView
     private var exitDialogShowing = false
 
-    /** 观察设置回填开关时抑制监听器，避免误触发权限申请。 */
+    /** 观察Settings回填开关时抑制监听器，避免误触发权限申请。 */
     private var suppressKeepAliveListener = false
 
-    /** 每台已发现控制端（按 MAC/IP）各自记忆的模拟手柄类型。 */
+    /** 每台已发现控制端（按 MAC/IP）各自记忆的Emulated controller type。 */
     private var deviceModes: Map<String, VirtualGamepadType> = emptyMap()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,7 +93,7 @@ class ControlledActivity : ComponentActivity() {
         })
         findViewById<Button>(R.id.btnRefreshDevices).setOnClickListener {
             ControlledHostManager.refresh()
-            showToast("正在扫描…")
+            showToast("Scanning…")
         }
         findViewById<Button>(R.id.btnManualConnect).setOnClickListener {
             val ip = etManualIp.text.toString().trim()
@@ -119,8 +119,8 @@ class ControlledActivity : ComponentActivity() {
     }
 
     /**
-     * 初始化「网页手柄」卡片：列出可用网卡，默认选中主网卡，并展示地址与二维码。
-     * 静态资源与 WebSocket 桥接由 [WebServer] 在前台服务中托管。
+     * 初始化「Web controller”卡片: 列出可用网卡，默认选Center主网卡，并展示地址与二维码。
+     * 静态资源与 WebSocket 桥接由 [WebServer] 在前台服务Center托管。
      */
     private fun setupWebCard() {
         val interfaces = WebServer.enumerateLanInterfaces()
@@ -133,7 +133,7 @@ class ControlledActivity : ComponentActivity() {
         spinnerWebInterface.adapter = adapter
 
         if (interfaces.isEmpty()) {
-            tvWebHost.text = "未找到可用网卡"
+            tvWebHost.text = "No available network adapter"
             ivWebQr.setImageDrawable(null)
             spinnerWebInterface.isEnabled = false
             return
@@ -163,7 +163,7 @@ class ControlledActivity : ComponentActivity() {
         ivWebQr.setImageBitmap(bitmap)
     }
 
-    /** 读取每台控制端各自记忆的手柄类型，读完刷新列表以恢复已连接卡片的下拉框。 */
+    /** 读取每台控制端各自记忆的Controller类型，读完Refresh列表以恢复Connected卡片的Down拉框。 */
     private fun loadDeviceModes() {
         lifecycleScope.launch {
             deviceModes = deviceModeRepository.getModes()
@@ -171,11 +171,11 @@ class ControlledActivity : ComponentActivity() {
         }
     }
 
-    /** 返回某个物理设备（MAC/IP）当前应使用的手柄类型，未记录时沿用全局设置作为默认。 */
+    /** Back某个物理设备（MAC/IP）当前应使用的Controller类型，未记录时沿用Global settings作为默认。 */
     private fun modeFor(groupKey: String): VirtualGamepadType =
         deviceModes[groupKey] ?: connectionManager.settings.value.virtualGamepadType
 
-    /** 连接前先把该设备记忆的手柄类型同步给虚拟手柄后端，确保按设备生效。 */
+    /** Connect前先把该设备记忆的Controller类型同步给虚拟Controller后端，确保按设备生效。 */
     private fun connectDevice(device: ControlledDevice, groupKey: String) {
         val type = modeFor(groupKey)
         if (connectionManager.settings.value.virtualGamepadType != type) {
@@ -186,7 +186,7 @@ class ControlledActivity : ComponentActivity() {
         ControlledHostManager.connect(device)
     }
 
-    /** 绑定已连接设备卡片上的类型下拉框：切换后按设备持久化并立即重建虚拟手柄。 */
+    /** 绑定Connected设备卡片Up的类型Down拉框: 切换后按设备持久化并立即重建虚拟Controller。 */
     private fun bindDeviceModeSpinner(spinner: Spinner, groupKey: String) {
         val names = VirtualGamepadType.entries.map { it.displayName }.toTypedArray()
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, names)
@@ -228,11 +228,11 @@ class ControlledActivity : ComponentActivity() {
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
-        // 无论是否授权都启动服务：前台服务本身仍可运行，通知在授权后可见。
+        // None论是否授权都Start service: 前台服务本身仍可运行，通知在授权后可见。
         ControlledHostService.start(this)
     }
 
-    /** 被控端以前台服务 + 常驻通知的方式常驻，避免熄屏或切到后台后被系统杀进程。 */
+    /** Host以前台服务 + 常驻通知的方式常驻，避免熄屏或切到后台后被系统杀进程。 */
     private fun startHostWithNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
@@ -251,13 +251,13 @@ class ControlledActivity : ComponentActivity() {
             applyFloatingKeepAlive(true)
         } else {
             syncFloatingKeepAliveSwitch()
-            showToast("未授予悬浮窗权限，无法启用悬浮窗保活")
+            showToast("Overlay permission not granted; cannot enable keep-alive overlay")
         }
     }
 
     override fun onResume() {
         super.onResume()
-        // 用户可能在系统设置中授予了悬浮窗权限，回到页面时补挂窗口。
+        // 用户可能在系统SettingsCenter授予了悬浮窗权限，回到页面时补挂窗口。
         if (connectionManager.settings.value.floatingKeepAlive &&
             FloatingKeepAlive.canDrawOverlays(this) &&
             !FloatingKeepAlive.isActive()
@@ -266,7 +266,7 @@ class ControlledActivity : ComponentActivity() {
         }
     }
 
-    /** 开关变化：缺权限时先引导授权，授权成功后再落库并挂窗。 */
+    /** 开关变化: 缺权限时先引导授权，授权成功后再落库并挂窗。 */
     private fun onFloatingKeepAliveToggled(enabled: Boolean) {
         if (enabled && !FloatingKeepAlive.canDrawOverlays(this)) {
             requestOverlayPermission()
@@ -288,7 +288,7 @@ class ControlledActivity : ComponentActivity() {
             Uri.parse("package:$packageName"),
         )
         runCatching { overlayPermissionLauncher.launch(intent) }
-            .onFailure { showToast("无法打开悬浮窗权限设置") }
+            .onFailure { showToast("Cannot open overlay permission settings") }
     }
 
     private fun syncFloatingKeepAliveSwitch() {
@@ -297,16 +297,16 @@ class ControlledActivity : ComponentActivity() {
         suppressKeepAliveListener = false
     }
 
-    /** 返回：先弹确认框（返回后将停止服务），确认后再结束被控端并关闭页面。 */
+    /** Back: 先弹Confirm框（Back后将Stop service），Confirm后再结束Host并Close页面。 */
     private fun exitControlled() {
         if (exitDialogShowing) return
         exitDialogShowing = true
         CustomDialog.showConfirm(
             this,
-            "退出被控端",
-            "返回后将停止服务，确认返回吗？",
-            positiveText = "确认返回",
-            negativeText = "取消",
+            "Exit host mode",
+            "Going back will stop the service. Continue?",
+            positiveText = "Confirm back",
+            negativeText = "Cancel",
             onPositive = {
                 ControlledHostService.stop(this)
                 finish()
@@ -360,7 +360,7 @@ class ControlledActivity : ComponentActivity() {
         val inflater = LayoutInflater.from(this)
         for (card in cards) {
             val activeEndpoint = card.endpoints.firstOrNull { it.ip == active?.ip }
-            // 同一 MAC 有多个可用 IP 且均未连接时展开，逐条列出每个 IP。
+            // 同一 MAC 有多个可用 IP 且均Not connected时展开，逐条列出每个 IP。
             val expanded = card.hasMultipleEndpoints && activeEndpoint == null
             if (expanded) {
                 renderExpandedCard(inflater, card, connectingIp)
@@ -377,14 +377,14 @@ class ControlledActivity : ComponentActivity() {
     ) {
         val item = inflater.inflate(R.layout.item_controlled_device_group, deviceList, false)
         item.findViewById<TextView>(R.id.tvDeviceName).text = card.title
-        item.findViewById<TextView>(R.id.tvGroupSubtitle).text = "${card.endpoints.size} 个可用连接"
+        item.findViewById<TextView>(R.id.tvGroupSubtitle).text = "${card.endpoints.size} available connections"
         val endpointList = item.findViewById<LinearLayout>(R.id.endpointList)
         for (endpoint in card.endpoints) {
             val row = inflater.inflate(R.layout.item_controlled_endpoint, endpointList, false)
             row.findViewById<TextView>(R.id.tvEndpointIp).text = endpoint.ip
             val btnConnect = row.findViewById<Button>(R.id.btnEndpointConnect)
             if (endpoint.ip == connectingIp) {
-                btnConnect.text = "连接中…"
+                btnConnect.text = "Connecting…"
                 btnConnect.isEnabled = false
             }
             btnConnect.setOnClickListener { connectDevice(endpoint, card.groupKey) }
@@ -406,10 +406,10 @@ class ControlledActivity : ComponentActivity() {
         item.findViewById<TextView>(R.id.tvDeviceIp).text = device.subtitle
         val isActive = active?.ip == device.ip
         item.findViewById<TextView>(R.id.tvDeviceStatus).text = when {
-            isActive && reconnecting -> "尝试连接"
-            isActive -> "已连接"
-            device.ip == connectingIp -> "尝试连接"
-            else -> "可连接"
+            isActive && reconnecting -> "Try connecting"
+            isActive -> "Connected"
+            device.ip == connectingIp -> "Try connecting"
+            else -> "Available"
         }
         val btnConnect = item.findViewById<Button>(R.id.btnDeviceConnect)
         val btnDisconnect = item.findViewById<Button>(R.id.btnDeviceDisconnect)
@@ -441,11 +441,11 @@ class ControlledActivity : ComponentActivity() {
     private fun updateShizukuAction() {
         btnShizukuAction.isEnabled = true
         when (GamepadInjector.requiredAction(this)) {
-            GamepadInjector.Action.DOWNLOAD -> btnShizukuAction.text = "下载 Shizuku"
-            GamepadInjector.Action.OPEN -> btnShizukuAction.text = "打开 Shizuku"
-            GamepadInjector.Action.REQUEST_PERMISSION -> btnShizukuAction.text = "申请授权"
+            GamepadInjector.Action.DOWNLOAD -> btnShizukuAction.text = "Download Shizuku"
+            GamepadInjector.Action.OPEN -> btnShizukuAction.text = "Open Shizuku"
+            GamepadInjector.Action.REQUEST_PERMISSION -> btnShizukuAction.text = "Request permission"
             GamepadInjector.Action.NONE -> {
-                btnShizukuAction.text = "已授权"
+                btnShizukuAction.text = "Authorized"
                 btnShizukuAction.isEnabled = false
             }
         }

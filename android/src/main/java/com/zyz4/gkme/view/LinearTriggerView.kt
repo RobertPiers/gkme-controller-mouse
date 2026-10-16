@@ -41,7 +41,7 @@ class LinearTriggerView @JvmOverloads constructor(
             field = value
         }
 
-    /** 预测：用滑杆位移速度外推下一帧行程，加快模拟扳机响应。 */
+    /** 预测: 用滑杆 bits移速度外推Down一帧Travel，加快模拟Trigger响应。 */
     var prediction: Boolean = false
 
     var onValueChange: ((value: Int) -> Unit)? = null
@@ -56,11 +56,11 @@ class LinearTriggerView @JvmOverloads constructor(
     private var initialTouchY = 0f
     private var currentValue = 0
     private var wasAtMax = false
-    // ── 预测：上一次位移样本 ──
+    // ── 预测: Up一次 bits移样本 ──
     private var lastOffset = 0f
     private var lastOffsetTime = 0L
     private var hasOffsetSample = false
-    // 触控采样率识别：快速响应模式的外推时长与之同步。
+    // 触控采样率识别: Fast response mode的外推Duration与之同步。
     private val sampleRate = TouchSampleRateTracker(TAG)
     // 是否已获得有效移动样本（跳过 DOWN→首次 MOVE）。
     private var hasMoveSample = false
@@ -145,26 +145,26 @@ class LinearTriggerView @JvmOverloads constructor(
 
                 when (slideDirection) {
                     SlideDirection.DOWN -> {
-                        // 手指向下（dy>0）→ 按钮向下移动（translationY>0）
-                        // 不允许手指向上（dy<0）移动
+                        // 手指Down（dy>0）→ ButtonDown移动（translationY>0）
+                        // 不允许手指Up（dy<0）移动
                         val clampedDy = dy.coerceIn(0f, travelPx)
                         setTranslationY(clampedDy)
                     }
                     SlideDirection.UP -> {
-                        // 手指向上（dy<0）→ 按钮向上移动（translationY<0）
-                        // 不允许手指向下（dy>0）移动
+                        // 手指Up（dy<0）→ ButtonUp移动（translationY<0）
+                        // 不允许手指Down（dy>0）移动
                         val clampedDy = dy.coerceIn(-travelPx, 0f)
                         setTranslationY(clampedDy)
                     }
                     SlideDirection.LEFT -> {
-                        // 手指向左（dx<0）→ 按钮向左移动（translationX<0）
-                        // 不允许手指向右（dx>0）移动
+                        // 手指Left（dx<0）→ ButtonLeft移动（translationX<0）
+                        // 不允许手指Right（dx>0）移动
                         val clampedDx = dx.coerceIn(-travelPx, 0f)
                         setTranslationX(clampedDx)
                     }
                     SlideDirection.RIGHT -> {
-                        // 手指向右（dx>0）→ 按钮向右移动（translationX>0）
-                        // 不允许手指向左（dx<0）移动
+                        // 手指Right（dx>0）→ ButtonRight移动（translationX>0）
+                        // 不允许手指Left（dx<0）移动
                         val clampedDx = dx.coerceIn(0f, travelPx)
                         setTranslationX(clampedDx)
                     }
@@ -177,7 +177,7 @@ class LinearTriggerView @JvmOverloads constructor(
                 val effectiveOffset = if (prediction) {
                     val dtMs = (event.eventTime - lastOffsetTime).coerceAtLeast(1L)
                     val velocity = if (hasOffsetSample) (absOffset - lastOffset) / dtMs else 0f
-                    // 采样间隔优先取批处理中的历史样本；首个移动样本（DOWN→首次 MOVE）不可靠，跳过。
+                    // 采样间隔优先取批处理Center的历史样本；首个移动样本（DOWN→首次 MOVE）不可靠，跳过。
                     val history = event.historySize
                     if (history > 0) {
                         sampleRate.update((event.eventTime - event.getHistoricalEventTime(history - 1)).coerceAtLeast(1L).toFloat())
@@ -187,7 +187,7 @@ class LinearTriggerView @JvmOverloads constructor(
                     hasMoveSample = true
                     lastOffset = absOffset
                     lastOffsetTime = event.eventTime
-                    // 外推时长与识别到的触控采样间隔同步；未识别时退回固定帧长。
+                    // 外推Duration与识别到的触控采样间隔同步；未识别时退回固定帧长。
                     val frame = sampleRate.intervalOr(com.zyz4.gkme.model.ButtonPosition.PREDICTION_FRAME_MS)
                     absOffset + velocity * frame
                 } else {

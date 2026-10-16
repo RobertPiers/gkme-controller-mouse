@@ -12,7 +12,7 @@ import com.zyz4.gkme.view.inputdispatcher.isTouchpadId
  * - Grid overlay (edit mode, fade-in/out)
  * - Follow-area / touchpad-area / dpadPad-area rectangles
  * - Selected button highlight (stroke + resize handle)
- * - Rotation direction marker ("上")
+ * - Rotation direction marker ("Up")
  *
  * Interface is small: one `render()` method + appearance setters.
  * Implementation owns all Paint objects and canvas drawing logic.

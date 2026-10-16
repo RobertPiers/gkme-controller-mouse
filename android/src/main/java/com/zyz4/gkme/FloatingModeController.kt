@@ -25,7 +25,7 @@ import kotlin.math.hypot
 import kotlin.math.roundToInt
 
 /**
- * Drives "悬浮模式": the app minimizes and an overlay window shows the gamepad.
+ * Drives "Overlay mode": the app minimizes and an overlay window shows the gamepad.
  *
  * In the hidden state a single small window containing the show/hide button is placed
  * on screen and can be dragged around. Tapping it shows the full-screen controls window
@@ -253,7 +253,7 @@ internal class FloatingModeController(private val activity: MainActivity) {
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             val pad = (8f * density).toInt()
             setPadding(pad, pad, pad, pad)
-            contentDescription = "显示/隐藏悬浮按钮"
+            contentDescription = "Show/hide floating button"
             isClickable = true
         }
         // Match the settings button's background / border configuration.

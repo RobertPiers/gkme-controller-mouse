@@ -17,7 +17,7 @@ public class DualSenseController extends AbstractDualSenseController {
            0x0CE6,//ps5
            0x0DF2,//ps5 edge
            0x100b,//有线模式 雷蛇幻影战狼v2pro
-           0x100c//无线模式 雷蛇幻影战狼v2pro
+           0x100c//None线模式 雷蛇幻影战狼v2pro
    };
    private static final int[] SUPPORTED_PRODUCTS_ALT = {
            0x0CF2,//PS5 DualSense (alternative PID - firmware variant)
@@ -63,7 +63,7 @@ public class DualSenseController extends AbstractDualSenseController {
          return false;
       }
 
-      // 输入报文按绝对字节索引解析（buffer.get(i)/getShort(i)），无需移动游标。
+      // 输入报文按绝对字节索引解析（buffer.get(i)/getShort(i)），None需移动游标。
 
       // Process D-pad (buttons0 & 0x0F)
       int dpad = buffer.get(8) & 0x0F;
@@ -135,7 +135,7 @@ public class DualSenseController extends AbstractDualSenseController {
       int accely = buffer.getShort(24);
       int accelz = buffer.getShort(26);
 
-      // 转换陀螺仪数据到 deg/s
+      // 转换Gyroscope数据到 deg/s
       float gyroX_dps = gyrox * GYRO_SCALE;
       float gyroY_dps = gyroy * GYRO_SCALE;
       float gyroZ_dps = gyroz * GYRO_SCALE;
@@ -276,18 +276,18 @@ public class DualSenseController extends AbstractDualSenseController {
       }
    }
 
-   //自适应扳机报文
+   //Adaptive triggers报文
    public static byte[] getTriggerEffectMode(byte[] rM,byte[] lM){
       return DualSenseOutputReport.adaptiveTriggersFromLegacy(rM, lM);
    }
 
    /**
-    * 设置自适应扳机
-    * @param mode 模式 0关闭 1阻尼 2扳机 6自动步枪
-    * @param strength 震动强度
-    * @param frequency 震动频率（mode=6生效）
-    * @param start 起始位置
-    * @param end 结束位置
+    * SettingsAdaptive triggers
+    * @param mode 模式 0Close 1阻尼 2Trigger 6自动步枪
+    * @param strength Vibration强度
+    * @param frequency Vibration频率（mode=6生效）
+    * @param start 起始 bits置
+    * @param end 结束 bits置
     * @return
     */
    public static byte[] setTrigger(int mode,int strength,int frequency,int start,int end){
@@ -308,29 +308,29 @@ public class DualSenseController extends AbstractDualSenseController {
 //              0x06,          // R2 trigger effect mode 自动步枪
 //              (byte)0x0a, // R2 trigger effect parameter 1 频率10
 //              (byte)0xff, // R2 trigger effect parameter 2 强度255
-//              (byte)0x14, // R2 trigger effect parameter 3 起始位置20
+//              (byte)0x14, // R2 trigger effect parameter 3 起始 bits置20
       return new byte[] {(byte)0x06,(byte)(10&0xFF),(byte)0xFF,(byte)20&0xFF};
    }
 
    //阻尼
    public static byte[] resistanceTrigger(){
 //              0x01,       // L2 trigger effect mode 阻尼
-//              0x28,       // L2 trigger effect parameter 1 起始位置40
+//              0x28,       // L2 trigger effect parameter 1 起始 bits置40
 //              (byte)0xE6, // L2 trigger effect parameter 2 强度230
 //              0x00,       // L2 trigger effect parameter 3
       return new byte[] {(byte)0x01,(byte)0x28,(byte)0xE6,(byte)0x00};
    }
 
-   //扳机
+   //Trigger
    public static byte[] normalTrigger(){
-//              0x02,       // L2 trigger effect mode 扳机
-//              0xF,       // L2 trigger effect parameter 1 起始位置40
-//              (byte)0x64, // L2 trigger effect parameter 2 结束位置 100
+//              0x02,       // L2 trigger effect mode trigger
+//              0xF,       // L2 trigger effect parameter 1 起始 bits置40
+//              (byte)0x64, // L2 trigger effect parameter 2 结束 bits置 100
 //              0xff,       // L2 trigger effect parameter 3 强度255
       return new byte[] {(byte)0x02,(byte)0xF,(byte)0x64,(byte)0xff};
    }
 
-   //关闭
+   //Close
    public static byte[] clearTrigger(){
 //              0x02,       // L2 trigger effect mode
 //              0xF,       // L2 trigger effect parameter 1

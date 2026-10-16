@@ -21,7 +21,7 @@ import com.zyz4.gkme.R
  * The curve is drawn as a square sized to the short screen edge and shares the vertical space
  * with the buttons, so the whole column fills the screen height. Add this as the last child of a
  * full-screen container (the layout global settings page or the activity content view); the
- * top-left 返回 button mirrors the sidebar 返回 button.
+ * top-left Back button mirrors the sidebar Back button.
  */
 class CurveZoomOverlay @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -40,12 +40,12 @@ class CurveZoomOverlay @JvmOverloads constructor(
         val column = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            // Leave room at the top for the top-left 返回 button (same slot as the sidebar one).
+            // Leave room at the top for the top-left Back button (same slot as the sidebar one).
             setPadding((16f * density).toInt(), (68f * density).toInt(), (16f * density).toInt(), (12f * density).toInt())
         }
 
         column.addView(TextView(context).apply {
-            text = "灵敏度曲线"
+            text = "Sensitivity curve"
             setTextColor(Color.WHITE)
             textSize = 16f
             gravity = Gravity.CENTER
@@ -67,14 +67,14 @@ class CurveZoomOverlay @JvmOverloads constructor(
         }
         val btnHeight = (48f * density).toInt()
         btnRow.addView(Button(context).apply {
-            text = "删除选中点"
+            text = "Delete selected point"
             setTextColor(Color.WHITE)
             textSize = 14f
             setBackgroundResource(R.drawable.button_flat)
             setOnClickListener { curveEditor.deleteSelected() }
         }, LinearLayout.LayoutParams(0, btnHeight, 1f).apply { rightMargin = (6f * density).toInt() })
         btnRow.addView(Button(context).apply {
-            text = "重置为直线"
+            text = "Reset to straight line"
             setTextColor(Color.WHITE)
             textSize = 14f
             setBackgroundResource(R.drawable.button_flat)
@@ -89,7 +89,7 @@ class CurveZoomOverlay @JvmOverloads constructor(
 
         // Added last so it sits on top and reliably receives the tap in its slot.
         addView(Button(context).apply {
-            text = "返回"
+            text = "Back"
             gravity = Gravity.CENTER
             setTextColor(ContextCompat.getColor(context, R.color.text_primary))
             textSize = 13f

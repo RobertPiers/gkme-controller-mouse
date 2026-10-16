@@ -214,7 +214,7 @@ class ClassicHidTransport(
     override fun sendReport(report: ByteArray) {
         val device = connectedDevice ?: return
         val hid = hidDevice ?: return
-        
+
         if (sendFailedCounter.get() > 50) {
             Log.w("ClassicHid", "sendReport dropped - too many consecutive failures")
             return

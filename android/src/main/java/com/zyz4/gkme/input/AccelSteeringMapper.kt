@@ -16,16 +16,16 @@ data class AccelStick(val x: Float, val y: Float)
  * Accelerometer -> stick mapping. The axis sources, signs and the sensitivity scaling are the
  * same as the original implementation:
  *
- * - 竖放 ([GyroBaseDirection.VERTICAL]): X = -aX, Y = -aY (normalized by gravity magnitude)
- * - 平放 ([GyroBaseDirection.HORIZONTAL]): X = -aX, Y = -aZ (normalized by gravity magnitude)
+ * - Upright ([GyroBaseDirection.VERTICAL]): X = -aX, Y = -aY (normalized by gravity magnitude)
+ * - Flat ([GyroBaseDirection.HORIZONTAL]): X = -aX, Y = -aZ (normalized by gravity magnitude)
  *
  * Both stick axes behave like real multi-turn wheels in either hold: rotating past ±90° keeps
  * increasing instead of reversing. The in-plane angle proxy stays `90°·(a/g)` (the same response
  * as the original `aX`/`aY`/`aZ`), while each axis' half-turn is tracked continuously from the gyro
  * about its own rotation axis (with a slow accelerometer correction), so tilting about the
- * perpendicular axis cannot flip the direction. X rotates about the screen normal in 竖放 and
- * about the in-plane z axis in 平放; Y rotates about the in-plane x axis in both. When no gyro data
- * is available the 竖放 X axis falls back to the sign of the out-of-plane gravity component
+ * perpendicular axis cannot flip the direction. X rotates about the screen normal in Upright and
+ * about the in-plane z axis in Flat; Y rotates about the in-plane x axis in both. When no gyro data
+ * is available the Upright X axis falls back to the sign of the out-of-plane gravity component
  * (`aZ`); the other axes stay a plain single-turn response. Within ±90° the output is identical to
  * the original.
  *
@@ -173,7 +173,7 @@ class AccelSteeringMapper {
         val rawX: Float
         val rawY: Float
         if (baseDirection == GyroBaseDirection.VERTICAL) {
-            // 竖放: both axes act as multi-turn wheels. X rotates about the screen normal (gyroY),
+            // Upright: both axes act as multi-turn wheels. X rotates about the screen normal (gyroY),
             // Y about the in-plane x axis (gyroX); the shared neutral-gravity reference is aZ.
             val refZ = if (orientation == GyroOrientation.LANDSCAPE || !inverted) -1f else 1f
             val (turnsX, sideX) = resolveWheel(
@@ -187,7 +187,7 @@ class AccelSteeringMapper {
             rawX = -(180f * turnsX + 90f * nx * sideX) / 90f
             rawY = -(180f * turnsY + 90f * ny * sideY) / 90f
         } else {
-            // 平放: X rotates about the in-plane z axis (gyroZ), Y about x (gyroX); the shared
+            // Flat: X rotates about the in-plane z axis (gyroZ), Y about x (gyroX); the shared
             // neutral-gravity reference is aY.
             val (turnsX, sideX) = resolveWheel(
                 wheelX, nx, ref = ny, refSign = 1f,
@@ -212,7 +212,7 @@ class AccelSteeringMapper {
             val mag = sqrt(rawX * rawX + rawY * rawY)
             if (mag > 0f) {
                 val normalized = mag.coerceIn(0f, 1f)
-                // 死区优先：死区内恒输出 0，反死区只在死区之外抬升下限。
+                // 死区优先: 死区内恒输出 0，反死区只在死区之外抬升Down限。
                 val afterDeadZone = if (normalized <= dz) 0f
                                     else (normalized - dz) / (1f - dz)
                 val afterReverseDeadZone = if (afterDeadZone == 0f) 0f
@@ -223,7 +223,7 @@ class AccelSteeringMapper {
             }
         }
 
-        // 灵敏度曲线：死区之后、灵敏度之前，按满量程（|输出| = 1）径向映射。
+        // Sensitivity curve: 死区之后、Sensitivity之前，按满量程（|输出| = 1）径向映射。
         val (curvedX, curvedY) = SensitivityCurve.applyRadial(curve, outX, outY, 1f)
         outX = curvedX
         outY = curvedY

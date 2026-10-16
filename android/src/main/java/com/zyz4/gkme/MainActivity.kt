@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
     internal var audioPollingJob: kotlinx.coroutines.Job? = null
     internal var shizukuPollingJob: kotlinx.coroutines.Job? = null
     internal var localStartPending = false
-    /** 用户点击“启动服务”后因缺少蓝牙权限而挂起的蓝牙模式启动请求。 */
+    /** 用户点击“Start service”后因缺少Bluetooth权限而挂起的Bluetooth模式启动请求。 */
     internal var pendingBluetoothStart = false
     internal var lastAppliedSettings: AppSettings? = null
     internal var lastPresetInfos: Any? = null
@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
 
     private var mediaSession: MediaSession? = null
 
-    /** 自适应扳机的手机马达是否已被 HD 通路接管。 */
+    /** Adaptive triggers的Phone motor是否已被 HD 通路接管。 */
     private var phoneHdAdaptiveOwned = false
 
     internal val vibrator: Vibrator by lazy {
@@ -105,18 +105,18 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestMultiplePermissions()
     ) { granted ->
         if (granted.all { it.value }) {
-            // 仅在“启动蓝牙模式”流程中申请：授权成功后继续启动服务。
+            // 仅在“启动Bluetooth模式”流程Center申请: 授权成功后继续Start service。
             if (pendingBluetoothStart) {
                 pendingBluetoothStart = false
                 checkBluetoothOnAndStart()
             }
         } else {
             pendingBluetoothStart = false
-            showToast("需要蓝牙权限才能使用蓝牙模式")
+            showToast("Bluetooth permission is required for Bluetooth mode")
         }
     }
 
-    /** 蓝牙运行时权限（Android 12+）是否已全部授予。低版本安装时即授予，无需申请。 */
+    /** Bluetooth运行时权限（Android 12+）是否已全部授予。低版本安装时即授予，None需申请。 */
     internal fun hasBluetoothRuntimePermissions(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
         return android.Manifest.permission.BLUETOOTH_CONNECT.let {
@@ -129,8 +129,8 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * 启动蓝牙模式：应用启动时不申请蓝牙权限，只有用户启动蓝牙模式时才在此处按需申请；
-     * 已授权则直接检查蓝牙开关并启动服务。
+     * 启动Bluetooth模式: 应用启动时不申请Bluetooth权限，只有用户启动Bluetooth模式时才在此处按需申请；
+     * Authorized则直接检查Bluetooth开关并Start service。
      */
     internal fun startBluetoothModeWithPermission() {
         if (hasBluetoothRuntimePermissions()) {
@@ -152,7 +152,7 @@ class MainActivity : ComponentActivity() {
         if (result.resultCode == RESULT_OK) {
             viewModel.startServer()
         } else {
-            showToast("需要开启蓝牙才能使用蓝牙模式")
+            showToast("Enable Bluetooth to use Bluetooth mode")
         }
     }
 
@@ -190,7 +190,7 @@ class MainActivity : ComponentActivity() {
         if (Settings.canDrawOverlays(this)) {
             continueEnterFloating()
         } else {
-            showToast("需要悬浮窗权限才能使用悬浮模式")
+            showToast("Overlay permission is required for overlay mode")
         }
     }
 
@@ -258,9 +258,9 @@ class MainActivity : ComponentActivity() {
         setupAppearanceImageLaunchers()
         Handler(Looper.getMainLooper()).postDelayed({
             // 首帧之后再初始化 Shizuku 监听与 RichTap 预置资源，避免拖慢启动。
-            // 注册 Shizuku 监听（本机模式使用），以便连接页正确显示授权条目状态。
+            // 注册 Shizuku 监听（Local模式使用），以便Connect页正确Display授权条目Status。
             GamepadInjector.init(this)
-            // 高清震动（HD）进程内 RichTap；本机不支持时自动回退普通震动。
+            // 高清Vibration（HD）进程内 RichTap；LocalUnsupported时自动回退普通Vibration。
             HapticInjector.init(this)
             physicalControllerHandler.start()
             ensureSettingsInflated()
@@ -276,9 +276,9 @@ class MainActivity : ComponentActivity() {
                     gamepadLayout.isEditModeActive() -> {
                         CustomDialog.showConfirm(
                             context = this@MainActivity,
-                            title = "退出编辑",
-                            message = "是否放弃更改？",
-                            positiveText = "放弃",
+                            title = "Exit editor",
+                            message = "Discard changes?",
+                            positiveText = "Discard",
                             onPositive = {
                                 gamepadLayout.discardToSnapshot()
                                 gamepadLayout.exitEditMode()
@@ -365,8 +365,8 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * 本机模式下服务已启动时，用户每次最小化应用（Home / 最近任务）都自动进入悬浮模式，
-     * 无需再手动点按悬浮按钮。切到本 App 内部页面或系统权限页不会触发
+     * Local模式Down服务已启动时，用户每次最小化应用（Home / 最近任务）都自动EnterOverlay mode，
+     * None需再手动点按悬浮Button。切到本 App 内部页面或系统权限页不会触发
      * [onUserLeaveHint]，因此不会被误触发。
      */
     override fun onUserLeaveHint() {
@@ -378,10 +378,10 @@ class MainActivity : ComponentActivity() {
         if (viewModel.settings.value.connectionMode != ConnectionMode.LOCAL) return
         if (viewModel.connectionState.value.phase == ConnectionPhase.IDLE) return
         if (!::floatingController.isInitialized || floatingController.isActive) return
-        // 悬浮启动的权限流程进行中时不再重复触发，避免权限对话框反复弹出。
+        // 悬浮启动的权限流程进行Center时不再重复触发，避免权限对话框反复弹出。
         if (pendingFloatingStart) return
         // 缺少悬浮窗权限时 enterFloatingMode 会跳转授权页；这里不主动触发，避免
-        // 每次最小化都弹出授权流程。授权后由启动服务/手动入口进入。
+        // 每次最小化都弹出授权流程。授权后由Start service/手动入口Enter。
         if (!Settings.canDrawOverlays(this)) return
         if (gamepadLayout.isEditModeActive()) return
         enterFloatingMode()
@@ -400,7 +400,7 @@ class MainActivity : ComponentActivity() {
     internal fun enterFloatingMode() {
         if (::floatingController.isInitialized && floatingController.isActive) return
         if (gamepadLayout.isEditModeActive()) {
-            showToast("请先退出编辑模式")
+            showToast("Exit edit mode first")
             return
         }
         if (!Settings.canDrawOverlays(this)) {
@@ -434,14 +434,14 @@ class MainActivity : ComponentActivity() {
         floatingController.enter()
         floatingStartedAt = android.os.SystemClock.elapsedRealtime()
         moveTaskToBack(true)
-        showToast("悬浮模式已开启，点按悬浮按钮显示/隐藏")
+        showToast("Overlay enabled. Tap the floating button to show/hide.")
     }
 
     internal fun exitFloatingMode() {
         if (!::floatingController.isInitialized || !floatingController.isActive) return
         runCatching { floatingController.exit() }
         stopService(Intent(this, FloatingOverlayService::class.java))
-        showToast("已退出悬浮模式")
+        showToast("Overlay mode closed")
     }
 
     internal var pointerCaptureNeeded = false
@@ -482,7 +482,7 @@ class MainActivity : ComponentActivity() {
     internal var gameVibrationDeviceEntries: List<com.zyz4.gkme.model.VibrationDevice> =
         listOf(com.zyz4.gkme.model.VibrationDevice.PHONE, com.zyz4.gkme.model.VibrationDevice.NONE)
 
-    /** Controller indices backing the physical-controller input spinner; -1 = 不使用手柄. */
+    /** Controller indices backing the physical-controller input spinner; -1 = No controller. */
     internal var inputControllerIndices: List<Int> = listOf(-1)
 
     /** True while the user is picking a physical-controller input from the spinner. */
@@ -675,7 +675,7 @@ class MainActivity : ComponentActivity() {
         a.setSettingsButtonEnabled(false)
         // Force the screen on while in screen-off mode, regardless of the user setting.
         a.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        a.showToast("使用返回键或返回手势退出")
+        a.showToast("Use the Back button or gesture to exit")
     }
 
     internal fun exitScreenOffMode() {
@@ -711,8 +711,8 @@ internal fun performHaptic(isPress: Boolean) {
             VibrationType.NONE -> return
             VibrationType.VIEW -> {
                 val effect = if (isPress) s.vibrationPressViewEffect else s.vibrationReleaseViewEffect
-                // 启用高清震动后，RichTap 动态效果会占用马达，导致系统 performHapticFeedback()
-                // 失效；因此用 RichTap 预置效果（PrebakedEffect）替换系统效果，HD 不可用时回退。
+                // 启用高清Vibration后，RichTap Dynamic效果会占用马达，导致系统 performHapticFeedback()
+                // 失效；因此用 RichTap 预置效果（PrebakedEffect）替换System effect，HD 不可用时回退。
                 if (PhoneHdHaptics.playPrebaked(effect.prebakedId)) return
                 gamepadLayout.performHapticFeedback(hapticEffectToConstant(effect))
             }
@@ -870,7 +870,7 @@ internal fun performHaptic(isPress: Boolean) {
         container.removeAllViews()
 
         container.addView(TextView(this).apply {
-            text = "音量键映射"
+            text = "Volume key mapping"
             setTextColor(ContextCompat.getColor(context, R.color.text_primary))
             textSize = 15f
             typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
@@ -883,7 +883,7 @@ internal fun performHaptic(isPress: Boolean) {
 
         container.addView(
             buildVolumeMappingRow(
-                label = "音量 +",
+                label = "Volume +",
                 bits = currentUp(),
                 density = density,
                 onAdd = {
@@ -908,7 +908,7 @@ internal fun performHaptic(isPress: Boolean) {
 
         container.addView(
             buildVolumeMappingRow(
-                label = "音量 -",
+                label = "Volume -",
                 bits = currentDown(),
                 density = density,
                 onAdd = {
@@ -959,14 +959,14 @@ internal fun performHaptic(isPress: Boolean) {
         fillVolumeChips(chips, bits, density, onRemove)
 
         row.addView(Button(this, null, 0, R.style.GamepadChip).apply {
-            text = "添加"
+            text = "Add"
             setOnClickListener { onAdd() }
         }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(36)).apply {
             rightMargin = dp(4)
         })
 
         row.addView(Button(this, null, 0, R.style.GamepadChip).apply {
-            text = "清空"
+            text = "Clear"
             setOnClickListener { onClear() }
         }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(36)))
 
@@ -982,7 +982,7 @@ internal fun performHaptic(isPress: Boolean) {
         container.removeAllViews()
         if (bits.isEmpty()) {
             container.addView(TextView(this).apply {
-                text = "未映射"
+                text = "Unmapped"
                 setTextColor(-0x777778)
                 textSize = 13f
                 setPadding(0, (4f * density).toInt(), 0, (4f * density).toInt())

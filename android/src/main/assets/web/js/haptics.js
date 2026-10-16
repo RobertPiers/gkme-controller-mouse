@@ -78,7 +78,7 @@ export class Haptics {
   }
 
   /** Server-driven rumble (Vibration: large_motor / small_motor, 0..255).
-   *  Routed to whichever actuator the user selected in the 震动 settings. */
+   *  Routed to whichever actuator the user selected in the Vibration settings. */
   rumble(large, small) {
     if (!this.settings.haptics.gameVibrate) return;
     const device = this.settings.haptics.device || { type: "phone" };

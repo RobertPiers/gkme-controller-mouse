@@ -39,7 +39,7 @@ object FollowAreaStrategy {
             if (!pos.followAreaEnabled) continue
 
             // 非 overlapTrigger 的“该点不得存在其它子控件”语义由调用方
-            // 过滤 childBounds 后保证，这里只做矩形命中判断即可。
+            // 过滤 childBounds 后保证，这里只做矩形命Center判断即可。
             if (isAnyPointerInArea(pos, cellW, cellH, pointers)) {
                 activated.add(pos.id)
             }

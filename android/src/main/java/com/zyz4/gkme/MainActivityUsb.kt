@@ -31,9 +31,9 @@ internal fun MainActivity.checkUsbAdbAndStart() {
 internal fun MainActivity.showUsbAdbGuideDialog() {
     val a = this
     val text = TextView(a).apply {
-        text = "1. 打开「设置 → 关于手机」，连续点击「版本号」7 次，开启开发者选项。\n\n" +
-            "2. 进入「开发者选项」，打开「USB 调试」。\n\n" +
-            "若已开启，请直接点击「启动服务」。"
+        text = "1. Open ‘Settings → About phone’ and tap ‘Build number’ 7 times to enable Developer options.\n\n" +
+            "2. Open ‘Developer options’ and enable ‘USB debugging’.\n\n" +
+            "If already enabled, tap ‘Start service’."
         textSize = 13f
         setTextColor(0xFFCCCCCC.toInt())
         setPadding(0, 0, 0, 0)
@@ -46,8 +46,8 @@ internal fun MainActivity.showUsbAdbGuideDialog() {
         addView(text)
     }
     CustomDialog.showCustomView(
-        a, "开启开发者选项与 USB 调试", content,
-        positiveText = "去开启", negativeText = "取消",
+        a, "Enable Developer options and USB debugging", content,
+        positiveText = "Enable", negativeText = "Cancel",
         onPositive = { a.openDeveloperOptions() },
     )
 }
@@ -67,5 +67,5 @@ internal fun MainActivity.openDeveloperOptions() {
         } catch (_: Exception) {
         }
     }
-    showToast("无法打开设置，请手动进入「开发者选项」")
+    showToast("Cannot open settings. Open Developer options manually.")
 }

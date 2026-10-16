@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 /**
  * Front-end for the physical gamepad stack.
  *
- * The user can pick between the built-in SDL3 backend and the "Axixi2233的USB驱动"
+ * The user can pick between the built-in SDL3 backend and the "Axixi2233 USB driver"
  * backend in the physical-controller settings. Switching tears the active backend
  * down and immediately brings the other one up, re-applying the stored settings so
  * the selected gamepad reconnects right away.

@@ -47,10 +47,10 @@ class FloatingOverlayService : Service() {
         val manager = getSystemService(NotificationManager::class.java) ?: return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "悬浮模式",
+            "Overlay mode",
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
-            description = "悬浮模式运行期间的常驻通知"
+            description = "Persistent notification while overlay mode is running"
             setShowBadge(false)
         }
         manager.createNotificationChannel(channel)
@@ -67,13 +67,13 @@ class FloatingOverlayService : Service() {
         val exitPendingIntent = PendingIntent.getActivity(this, 1, exitIntent, piFlags)
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("悬浮模式运行中")
-            .setContentText("点击返回应用即可退出悬浮模式")
+            .setContentTitle("Overlay mode is running")
+            .setContentText("Return to the app to exit overlay mode")
             .setSmallIcon(R.drawable.ic_eye)
             .setOngoing(true)
             .setContentIntent(contentIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .addAction(0, "退出悬浮模式", exitPendingIntent)
+            .addAction(0, "Exit overlay mode", exitPendingIntent)
             .build()
     }
 }
