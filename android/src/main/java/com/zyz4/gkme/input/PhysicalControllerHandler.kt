@@ -271,6 +271,7 @@ class PhysicalControllerHandler(private val context: Context) : PhysicalControll
         return try {
             InputDevice.getDeviceIds().any { id ->
                 val device = InputDevice.getDevice(id) ?: return@any false
+                if (VirtualGamepad.matches(device)) return@any false
                 isEightBitDo(device.vendorId, device.productId) ||
                     device.name?.contains("8BitDo", ignoreCase = true) == true
             }

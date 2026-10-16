@@ -278,6 +278,7 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
         val hasEightBitDoInput = try {
             InputDevice.getDeviceIds().any { id ->
                 val device = InputDevice.getDevice(id) ?: return@any false
+                if (VirtualGamepad.matches(device)) return@any false
                 device.vendorId == EIGHTBITDO_VENDOR_ID ||
                     (device.vendorId == EIGHTBITDO_TRANSITION_VENDOR_ID &&
                         device.productId == EIGHTBITDO_TRANSITION_PRODUCT_ID)
