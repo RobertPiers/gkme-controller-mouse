@@ -164,13 +164,16 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
 
     override fun start() {
         if (running.get()) return
+        // Establish the USB policy before the SDL Java HID manager is acquired.
+        // This matters on Android: the manager registers its native callback as
+        // soon as it is acquired, while the actual USB scan happens during SDL
+        // initialization.
+        SdlNative.nativeSetHidApiEnabled(false)
+        refreshUsbDevices()
         val activity = context as? Activity
         if (activity != null) {
             SdlPlatform.setup(activity)
         }
-        // Publish the USB device list before SDL enumerates, so USB gamepads are
-        // recognised as HIDAPI-preferred from the very first detection.
-        refreshUsbDevices()
         if (!SdlNative.nativeInit()) {
             return
         }
@@ -264,11 +267,25 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
         } catch (_: Exception) {
             emptyList()
         }
-        val hasEightBitDo = devices.any {
+        val hasEightBitDoUsb = devices.any {
             it.vendorId == EIGHTBITDO_VENDOR_ID ||
                 (it.vendorId == EIGHTBITDO_TRANSITION_VENDOR_ID &&
                     it.productId == EIGHTBITDO_TRANSITION_PRODUCT_ID)
         }
+        // Some Samsung builds briefly hide the transitional USB node from
+        // UsbManager while Android has already exposed its gamepad InputDevice.
+        // Check both views so the HID manager is not enabled in that interval.
+        val hasEightBitDoInput = try {
+            InputDevice.getDeviceIds().any { id ->
+                val device = InputDevice.getDevice(id) ?: return@any false
+                device.vendorId == EIGHTBITDO_VENDOR_ID ||
+                    (device.vendorId == EIGHTBITDO_TRANSITION_VENDOR_ID &&
+                        device.productId == EIGHTBITDO_TRANSITION_PRODUCT_ID)
+            }
+        } catch (_: Exception) {
+            false
+        }
+        val hasEightBitDo = hasEightBitDoUsb || hasEightBitDoInput
         SdlNative.nativeSetHidApiEnabled(!hasEightBitDo)
         // Do not delay an 8BitDo Android gamepad while waiting for HIDAPI to
         // claim it. It deliberately stays on Android's already-authorized path.
