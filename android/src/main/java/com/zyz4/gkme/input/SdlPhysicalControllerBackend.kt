@@ -32,6 +32,7 @@ private const val TOUCHPAD_MAX_X = 1919
 private const val TOUCHPAD_MAX_Y = 942
 private const val TOUCHPAD_MAX_XF = 1919f
 private const val TOUCHPAD_MAX_YF = 942f
+private const val EIGHTBITDO_VENDOR_ID = 0x2DC8
 
 data class PhysicalControllerState(
     val buttons: UInt = 0u,
@@ -251,13 +252,22 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
         }
     }
 
-    /** Publishes the attached USB device IDs so the bridge can prefer HIDAPI for USB pads. */
+    /** Publishes attached USB IDs and selects the permission-free path for 8BitDo receivers. */
     private fun refreshUsbDevices() {
         val manager = usbManager ?: return
-        val keys = try {
-            manager.deviceList.values.map { (it.vendorId shl 16) or it.productId }.toIntArray()
+        val devices = try {
+            manager.deviceList.values.toList()
         } catch (_: Exception) {
+            emptyList()
+        }
+        val hasEightBitDo = devices.any { it.vendorId == EIGHTBITDO_VENDOR_ID }
+        SdlNative.nativeSetHidApiEnabled(!hasEightBitDo)
+        // Do not delay an 8BitDo Android gamepad while waiting for HIDAPI to
+        // claim it. It deliberately stays on Android's already-authorized path.
+        val keys = if (hasEightBitDo) {
             IntArray(0)
+        } else {
+            devices.map { (it.vendorId shl 16) or it.productId }.toIntArray()
         }
         SdlNative.nativeSetUsbDeviceIds(keys)
     }

@@ -63,6 +63,11 @@ constexpr int TOUCHPAD_MAX_X = 1919;
 constexpr int TOUCHPAD_MAX_Y = 942;
 constexpr int TRIGGER_DIGITAL_THRESHOLD = 16384;  // half of 0..32767
 
+// 8BitDo receivers expose a complete Android gamepad device. Opening their raw
+// HID interface is unnecessary for GKME's mappings and causes Android's USB
+// permission dialog to be shown again after the receiver is reattached.
+constexpr Uint16 EIGHTBITDO_VENDOR = 0x2DC8;
+
 struct Snapshot {
     int buttons = 0;
     int leftX = 0;
@@ -142,6 +147,10 @@ std::vector<Entry> g_gamepads;
 std::thread g_thread;
 std::atomic<bool> g_running{false};
 std::atomic<bool> g_initialized{false};
+// Set by Kotlin before nativeInit() after inspecting the attached USB devices.
+// Keep HIDAPI available for other controllers, but use Android's input path when
+// an 8BitDo receiver is present so no raw USB permission is requested.
+std::atomic<bool> g_hidapiEnabled{true};
 
 std::mutex g_initMutex;
 std::condition_variable g_initCv;
@@ -240,7 +249,7 @@ bool isGkmeVirtualGamepad(SDL_JoystickID id) {
 
 void applyHints() {
     // Use the HIDAPI drivers whenever possible (USB / BLE controllers).
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "1");
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, g_hidapiEnabled.load() ? "1" : "0");
     // "Extended reports": rumble/effects on Bluetooth PlayStation controllers and
     // gyro on Nintendo Switch controllers. This is the "扩展报告" feature.
     SDL_SetHint(SDL_HINT_JOYSTICK_ENHANCED_REPORTS, "1");
@@ -264,10 +273,9 @@ void applyHints() {
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_STADIA, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_LUNA, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SHIELD, "1");
-    // 8BitDo receivers already expose a complete Android gamepad device. Keep
-    // their raw HID path disabled so Android does not show a USB permission
-    // dialog every time the receiver is reattached; the SDL Android gamepad
-    // path still supplies buttons, sticks, triggers, and rumble.
+    // Keep the per-driver path disabled as an additional guard. The generic
+    // HIDAPI switch above is disabled dynamically for an attached 8BitDo
+    // receiver, before SDL initializes its HID/USB manager.
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_8BITDO, "0");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_FLYDIGI, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SINPUT, "1");
@@ -1068,6 +1076,18 @@ Java_com_zyz4_gkme_input_SdlNative_nativeSetUsbDeviceIds(JNIEnv *env, jobject th
         g_usbDeviceKeys.insert(static_cast<Uint32>(values[i]));
     }
     env->ReleaseIntArrayElements(keys, values, JNI_ABORT);
+}
+
+JNIEXPORT void JNICALL
+Java_com_zyz4_gkme_input_SdlNative_nativeSetHidApiEnabled(JNIEnv *env, jobject thiz,
+                                                           jboolean enabled) {
+    (void) env;
+    (void) thiz;
+    g_hidapiEnabled.store(enabled == JNI_TRUE);
+    // The normal call happens before nativeInit(), where applyHints() consumes
+    // this value. Updating the hint here also makes a later backend restart use
+    // the new policy without relying on process-global SDL state.
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, enabled == JNI_TRUE ? "1" : "0");
 }
 
 JNIEXPORT void JNICALL

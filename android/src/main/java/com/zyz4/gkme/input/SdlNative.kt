@@ -90,6 +90,12 @@ object SdlNative {
     external fun nativeSetUsbDeviceIds(keys: IntArray)
 
     /**
+     * Enables raw SDL HIDAPI unless an attached device should stay on Android's
+     * input path (currently used for 8BitDo receivers to avoid USB prompts).
+     */
+    external fun nativeSetHidApiEnabled(enabled: Boolean)
+
+    /**
      * Enables/disables hiding GKME's own virtual gamepads (uinput/uhid) from SDL.
      * Should be enabled only while a virtual gamepad is actually running, so a real
      * controller sharing the same vendor/product is not hidden.
