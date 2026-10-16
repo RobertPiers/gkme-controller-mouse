@@ -244,39 +244,40 @@ bool isGkmeVirtualGamepad(SDL_JoystickID id) {
 
 void applyHints() {
     // Use the HIDAPI drivers whenever possible (USB / BLE controllers).
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, g_hidapiEnabled.load() ? "1" : "0");
+    const char *hidapi = g_hidapiEnabled.load() ? "1" : "0";
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, hidapi);
     // "Extended reports": rumble/effects on Bluetooth PlayStation controllers and
     // gyro on Nintendo Switch controllers. This is the "扩展报告" feature.
     SDL_SetHint(SDL_HINT_JOYSTICK_ENHANCED_REPORTS, "1");
 
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS3, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SWITCH, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SWITCH2, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_JOY_CONS, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_COMBINE_JOY_CONS, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_NINTENDO_CLASSIC, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_WII, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX_360, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX_360_WIRELESS, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX_ONE, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_GIP, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_STEAM, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_STEAMDECK, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_STADIA, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_LUNA, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SHIELD, "1");
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS3, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SWITCH, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SWITCH2, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_JOY_CONS, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_COMBINE_JOY_CONS, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_NINTENDO_CLASSIC, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_WII, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX_360, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX_360_WIRELESS, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX_ONE, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_GIP, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_STEAM, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_STEAMDECK, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_STADIA, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_LUNA, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SHIELD, hidapi);
     // Keep the per-driver path disabled as an additional guard. The generic
     // HIDAPI switch above is disabled dynamically for an attached 8BitDo
     // receiver, before SDL initializes its HID/USB manager.
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_8BITDO, "0");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_FLYDIGI, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SINPUT, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_ZUIKI, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_LG4FF, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_GAMECUBE, "1");
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_FLYDIGI, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SINPUT, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_ZUIKI, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_LG4FF, hidapi);
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_GAMECUBE, hidapi);
 
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
