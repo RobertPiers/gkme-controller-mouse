@@ -48,6 +48,9 @@ class PhysicalControllerHandler(private val context: Context) : PhysicalControll
     /** True while the USB driver cannot handle the attached gamepad and SDL3 is used instead. */
     private var fallbackToSdl = false
 
+    /** Use Android's already-authorized InputManager path for the 8BitDo receiver. */
+    private var inputManagerForEightBitDo = false
+
     /** The driver chosen by the user in the settings. */
     var driver: ControllerDriver = ControllerDriver.SDL3
         private set
@@ -120,6 +123,7 @@ class PhysicalControllerHandler(private val context: Context) : PhysicalControll
     override fun start() {
         if (started) return
         started = true
+        inputManagerForEightBitDo = driver == ControllerDriver.SDL3 && hasEightBitDoReceiver()
         createAndStartBackend()
         startCompatibilityMonitor()
     }
@@ -137,6 +141,7 @@ class PhysicalControllerHandler(private val context: Context) : PhysicalControll
         if (newDriver == driver) return
         driver = newDriver
         fallbackToSdl = false
+        inputManagerForEightBitDo = driver == ControllerDriver.SDL3 && hasEightBitDoReceiver()
         if (started) {
             stopBackend()
             createAndStartBackend()
@@ -153,7 +158,14 @@ class PhysicalControllerHandler(private val context: Context) : PhysicalControll
 
     private fun createAndStartBackend() {
         val effectiveDriver = if (fallbackToSdl) ControllerDriver.SDL3 else driver
-        val newBackend: PhysicalControllerBackend = when (effectiveDriver) {
+        val selectedDriver = if (
+            effectiveDriver == ControllerDriver.SDL3 && inputManagerForEightBitDo
+        ) {
+            ControllerDriver.INPUT_MANAGER
+        } else {
+            effectiveDriver
+        }
+        val newBackend: PhysicalControllerBackend = when (selectedDriver) {
             ControllerDriver.SDL3 -> SdlPhysicalControllerBackend(context)
             ControllerDriver.AXIXI2233_USB -> UsbPhysicalControllerBackend(context)
             ControllerDriver.INPUT_MANAGER -> InputManagerPhysicalControllerBackend(context)
@@ -168,7 +180,7 @@ class PhysicalControllerHandler(private val context: Context) : PhysicalControll
         newBackend.onPointerCaptureNeeded = { enabled -> onPointerCaptureNeeded?.invoke(enabled) }
         newBackend.start()
         backend = newBackend
-        _activeDriver.value = effectiveDriver
+        _activeDriver.value = selectedDriver
         startMirroring(newBackend)
     }
 
@@ -183,6 +195,16 @@ class PhysicalControllerHandler(private val context: Context) : PhysicalControll
         compatibilityJob = scope.launch {
             while (isActive) {
                 delay(COMPATIBILITY_CHECK_INTERVAL_MS)
+                val shouldUseInputManager =
+                    driver == ControllerDriver.SDL3 && hasEightBitDoReceiver()
+                if (shouldUseInputManager != inputManagerForEightBitDo) {
+                    inputManagerForEightBitDo = shouldUseInputManager
+                    if (started) {
+                        stopBackend()
+                        createAndStartBackend()
+                    }
+                    continue
+                }
                 if (driver != ControllerDriver.AXIXI2233_USB) continue
                 val shouldFallback = hasSystemGamepad() && !isUsbDriverCompatible()
                 if (shouldFallback == fallbackToSdl) continue
@@ -222,6 +244,35 @@ class PhysicalControllerHandler(private val context: Context) : PhysicalControll
                 val sources = device.sources
                 (sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD) ||
                     (sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK)
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
+     * The Ultimate receiver can enumerate as 2dc8:3106/3109 or briefly as the
+     * Switch Pro identity 057e:2009. Those Android InputDevices are complete
+     * gamepads, so using InputManager avoids SDL HIDAPI's raw-USB permission.
+     */
+    private fun hasEightBitDoReceiver(): Boolean {
+        fun isEightBitDo(vendor: Int, product: Int): Boolean =
+            vendor == EIGHTBITDO_VENDOR_ID ||
+                (vendor == EIGHTBITDO_TRANSITION_VENDOR_ID &&
+                    product == EIGHTBITDO_TRANSITION_PRODUCT_ID)
+
+        try {
+            val manager = context.getSystemService(Context.USB_SERVICE) as? UsbManager
+            if (manager?.deviceList?.values?.any { isEightBitDo(it.vendorId, it.productId) } == true) {
+                return true
+            }
+        } catch (_: Exception) {
+        }
+        return try {
+            InputDevice.getDeviceIds().any { id ->
+                val device = InputDevice.getDevice(id) ?: return@any false
+                isEightBitDo(device.vendorId, device.productId) ||
+                    device.name?.contains("8BitDo", ignoreCase = true) == true
             }
         } catch (_: Exception) {
             false
@@ -395,5 +446,8 @@ class PhysicalControllerHandler(private val context: Context) : PhysicalControll
 
     companion object {
         private const val COMPATIBILITY_CHECK_INTERVAL_MS = 1000L
+        private const val EIGHTBITDO_VENDOR_ID = 0x2DC8
+        private const val EIGHTBITDO_TRANSITION_VENDOR_ID = 0x057E
+        private const val EIGHTBITDO_TRANSITION_PRODUCT_ID = 0x2009
     }
 }
