@@ -187,10 +187,6 @@ internal fun MainActivity.observeState() {
             }
             launch {
                 a.physicalControllerHandler.isConnected.collect { connected ->
-                    a.viewModel.setPhysicalControllerConnected(connected)
-                    a.viewModel.connectionManager.setPhysicalControllerConnected(connected)
-                    a.applyEffectivePhysicalControllerSettings()
-
                     if (!a.settingsInflated) return@collect
 
                     a.syncPhysicalControllerUI()
@@ -215,15 +211,9 @@ internal fun MainActivity.observeState() {
                     if (a.isLayoutGlobalSettingsVisible()) {
                         a.layoutGlobalSettingsPanel?.refreshCurrentTab()
                     }
-                    a.syncPhysicalControllerState()
                     // ControllerConnect时重新应用当前LEDStatus
                     val led = a.viewModel.ledState.value
                     a.physicalControllerHandler.setLedColor(led.color, led.playerLed)
-                }
-            }
-            launch {
-                a.physicalControllerHandler.controllerState.collect {
-                    a.syncPhysicalControllerState()
                 }
             }
             launch {
@@ -245,21 +235,57 @@ internal fun MainActivity.observeState() {
                         a.findViewById<android.widget.SeekBar>(R.id.seekControllerGyroY).progress = (y * 100).toInt().coerceIn(-3000, 3000)
                         a.findViewById<android.widget.SeekBar>(R.id.seekControllerGyroZ).progress = (z * 100).toInt().coerceIn(-3000, 3000)
                     }
-                    val s = a.viewModel.settings.value
-                    val gyroEnabled = if (a.physicalControllerHandler.isConnected.value) s.controllerGyroEnabledConnected else s.controllerGyroEnabled
-                    val activateMode = s.gyroActivateMode
-                    val actualGyroEnabled = if (activateMode == GyroActivateMode.BUTTON) {
-                        a.viewModel.gyroOverrideEnabled.value
-                    } else {
-                        gyroEnabled
-                    }
-                    if (actualGyroEnabled && a.physicalControllerHandler.controllerHasGyro) {
-                        val accel = a.physicalControllerHandler.accelData.value
-                        // 所有后端已统一输出 rad/s
-                        a.viewModel.onPhysicalControllerGyro(gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2])
-                    }
                 }
             }
         }
     }
+}
+
+/**
+ * Forwards physical-controller state independently of Activity visibility.
+ *
+ * [observeState] uses repeatOnLifecycle for UI work, which is correct for settings widgets but
+ * would stop Local-mode input as soon as overlay mode moves MainActivity to the background.  The
+ * local virtual controller/mouse is process-scoped, so its physical input feed must remain alive
+ * until the Activity is actually destroyed.
+ */
+internal fun MainActivity.observePhysicalControllerInputContinuously() {
+    lifecycleScope.launch {
+        launch {
+            physicalControllerHandler.isConnected.collect { connected ->
+                viewModel.setPhysicalControllerConnected(connected)
+                viewModel.connectionManager.setPhysicalControllerConnected(connected)
+                applyEffectivePhysicalControllerSettings()
+            }
+        }
+        launch {
+            physicalControllerHandler.controllerState.collect {
+                syncPhysicalControllerState()
+            }
+        }
+        launch {
+            physicalControllerHandler.gyroData.collect { gyro ->
+                forwardPhysicalControllerGyro(gyro)
+            }
+        }
+    }
+}
+
+/** Keeps controller gyro data feeding the local send loop while the UI is in the background. */
+private fun MainActivity.forwardPhysicalControllerGyro(gyro: FloatArray) {
+    val s = viewModel.settings.value
+    val gyroEnabled = if (physicalControllerHandler.isConnected.value) {
+        s.controllerGyroEnabledConnected
+    } else {
+        s.controllerGyroEnabled
+    }
+    val actualGyroEnabled = if (s.gyroActivateMode == GyroActivateMode.BUTTON) {
+        viewModel.gyroOverrideEnabled.value
+    } else {
+        gyroEnabled
+    }
+    if (!actualGyroEnabled || !physicalControllerHandler.controllerHasGyro) return
+    val accel = physicalControllerHandler.accelData.value
+    // All physical-controller backends expose gyro values in rad/s.
+    viewModel.onPhysicalControllerGyro(gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2])
 }

@@ -290,6 +290,11 @@ class MainActivity : ComponentActivity() {
             }
         })
         observeState()
+        // Physical-controller input must continue while Local/overlay mode has moved the
+        // activity to the background.  UI observation is intentionally lifecycle-bound, but
+        // the controller state is also the source for the local virtual mouse and must not stop
+        // when the activity is no longer STARTED.
+        observePhysicalControllerInputContinuously()
         autoStartService()
         setupUsbAudioCallbacks()
         displayManager.registerDisplayListener(displayListener, null)
