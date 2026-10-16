@@ -126,6 +126,8 @@ class GkViewModel @Inject constructor(
         if (!connected) {
             physicalMouseToggleLatched = false
             setPhysicalMouseMode(false, announce = false)
+            physicalMouseTriggerLeft = 0
+            physicalMouseTriggerRight = 0
         }
     }
 
@@ -135,6 +137,7 @@ class GkViewModel @Inject constructor(
         _physicalMouseMode.value = enabled
         physicalMouseAccumX = 0f
         physicalMouseAccumY = 0f
+        physicalMouseWheelAccum = 0f
         if (!enabled) {
             // Always release a button that may have been held while leaving mouse mode.
             _gamepadState.value = _gamepadState.value.copy(
@@ -201,6 +204,13 @@ class GkViewModel @Inject constructor(
     /** Fractional carry keeps slow right-stick movement from being truncated at high polling rates. */
     private var physicalMouseAccumX = 0f
     private var physicalMouseAccumY = 0f
+
+    /** Raw analog trigger levels used for variable-speed mouse-wheel scrolling. */
+    @Volatile
+    private var physicalMouseTriggerLeft = 0
+    @Volatile
+    private var physicalMouseTriggerRight = 0
+    private var physicalMouseWheelAccum = 0f
 
     @Volatile
     private var physicalMouseModeEnabled = false
@@ -690,6 +700,8 @@ class GkViewModel @Inject constructor(
         touchpadClick: Boolean = false,
         touches: List<TouchPoint> = emptyList(),
     ) {
+        physicalMouseTriggerLeft = leftTrigger.coerceIn(0, 255)
+        physicalMouseTriggerRight = rightTrigger.coerceIn(0, 255)
         val toggleComboDown = (buttons and physicalMouseToggleBits) == physicalMouseToggleBits
         if (toggleComboDown && !physicalMouseToggleLatched) {
             physicalMouseToggleLatched = true
@@ -1006,6 +1018,7 @@ class GkViewModel @Inject constructor(
         if (!physicalMouseModeEnabled) {
             physicalMouseAccumX = 0f
             physicalMouseAccumY = 0f
+            physicalMouseWheelAccum = 0f
             return
         }
 
@@ -1024,13 +1037,28 @@ class GkViewModel @Inject constructor(
         val dy = physicalMouseAccumY.toInt()
         physicalMouseAccumX -= dx
         physicalMouseAccumY -= dy
-        if (dx == 0 && dy == 0) return
+        if (dx != 0 || dy != 0) {
+            val state = _gamepadState.value
+            _gamepadState.value = state.copy(
+                mouseDx = (state.mouseDx.toInt() + dx).coerceIn(-32768, 32767).toShort(),
+                mouseDy = (state.mouseDy.toInt() + dy).coerceIn(-32768, 32767).toShort(),
+            )
+        }
 
-        val state = _gamepadState.value
-        _gamepadState.value = state.copy(
-            mouseDx = (state.mouseDx.toInt() + dx).coerceIn(-32768, 32767).toShort(),
-            mouseDy = (state.mouseDy.toInt() + dy).coerceIn(-32768, 32767).toShort(),
-        )
+        // In mouse mode RT scrolls up and LT scrolls down. The analog level controls
+        // the rate, while the fractional accumulator keeps light trigger pressure smooth.
+        val triggerDelta = (physicalMouseTriggerRight - physicalMouseTriggerLeft) / 255f
+        physicalMouseWheelAccum += triggerDelta * PHYSICAL_MOUSE_SCROLL_UNITS_PER_SECOND * dtSec
+        val wheel = physicalMouseWheelAccum.toInt()
+        physicalMouseWheelAccum -= wheel
+        if (wheel != 0) {
+            val current = _gamepadState.value
+            _gamepadState.value = current.copy(
+                mouseWheel = (current.mouseWheel.toInt() + wheel)
+                    .coerceIn(-32768, 32767)
+                    .toShort(),
+            )
+        }
     }
 
     private fun startPeriodicSendLoop() {
@@ -1795,6 +1823,9 @@ class GkViewModel @Inject constructor(
 
 /** Trigger value (0..255) above which a remapped LT/RT counts as pressed. */
 private const val PHYSICAL_TRIGGER_MAP_THRESHOLD = 128
+
+/** Full trigger pressure scrolls at six 120-unit wheel detents per second. */
+private const val PHYSICAL_MOUSE_SCROLL_UNITS_PER_SECOND = 720f
 
 /** Short-axis magnitude that maps to full deflection for physical stick shaping. */
 private const val PHYSICAL_STICK_FULL_SCALE = 32767f
