@@ -264,7 +264,11 @@ void applyHints() {
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_STADIA, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_LUNA, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SHIELD, "1");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_8BITDO, "1");
+    // 8BitDo receivers already expose a complete Android gamepad device. Keep
+    // their raw HID path disabled so Android does not show a USB permission
+    // dialog every time the receiver is reattached; the SDL Android gamepad
+    // path still supplies buttons, sticks, triggers, and rumble.
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_8BITDO, "0");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_FLYDIGI, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SINPUT, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_ZUIKI, "1");

@@ -847,6 +847,20 @@ internal fun MainActivity.setupSettings() {
         })
     }
 
+    a.findViewById<SeekBar>(R.id.seekPhysicalMouseScrollSensitivity).apply {
+        max = 275
+        setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                val value = progress + 25
+                a.findViewById<TextView>(R.id.tvPhysicalMouseScrollSensitivity).text = "$value%"
+                if (fromUser) a.viewModel.updatePhysicalMouseScrollSensitivity(value)
+            }
+
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
+    }
+
     // ── Misc page ──
     a.setupMiscPage()
 
@@ -2072,6 +2086,9 @@ internal fun MainActivity.syncSettingsUI() {
     val mouseSensitivity = s.physicalMouseSensitivity.coerceIn(25, 300)
     a.findViewById<SeekBar>(R.id.seekPhysicalMouseSensitivity).progress = mouseSensitivity - 25
     a.findViewById<TextView>(R.id.tvPhysicalMouseSensitivity).text = "$mouseSensitivity%"
+    val mouseScrollSensitivity = s.physicalMouseScrollSensitivity.coerceIn(25, 300)
+    a.findViewById<SeekBar>(R.id.seekPhysicalMouseScrollSensitivity).progress = mouseScrollSensitivity - 25
+    a.findViewById<TextView>(R.id.tvPhysicalMouseScrollSensitivity).text = "$mouseScrollSensitivity%"
 
     a.refreshPresetList()
     a.syncAudioUI()

@@ -650,6 +650,12 @@ class GkViewModel @Inject constructor(
         )
     }
 
+    fun updatePhysicalMouseScrollSensitivity(sensitivity: Int) {
+        connectionManager.updateSettings(
+            settings.value.copy(physicalMouseScrollSensitivity = sensitivity.coerceIn(25, 300))
+        )
+    }
+
     fun updateVoiceCoilDevice(device: AudioDevice) {
         val updated = if (_physicalControllerConnected.value) {
             settings.value.copy(voiceCoilDeviceConnected = device)
@@ -1058,7 +1064,8 @@ class GkViewModel @Inject constructor(
         // In mouse mode RT scrolls up and LT scrolls down. The analog level controls
         // the rate, while the fractional accumulator keeps light trigger pressure smooth.
         val triggerDelta = (physicalMouseTriggerRight - physicalMouseTriggerLeft) / 255f
-        val targetWheelVelocity = triggerDelta * PHYSICAL_MOUSE_SCROLL_UNITS_PER_SECOND
+        val targetWheelVelocity = triggerDelta * PHYSICAL_MOUSE_SCROLL_UNITS_PER_SECOND *
+            (settings.value.physicalMouseScrollSensitivity.coerceIn(25, 300) / 100f)
         val smoothing = (dtSec * PHYSICAL_MOUSE_SCROLL_RESPONSE).coerceIn(0f, 1f)
         physicalMouseWheelVelocity +=
             (targetWheelVelocity - physicalMouseWheelVelocity) * smoothing

@@ -104,6 +104,7 @@ class SettingsRepository @Inject constructor(
         val CONTROLLER_DRIVER = intPreferencesKey("controller_driver")
         val INPUT_CONTROLLER_INDEX = intPreferencesKey("input_controller_index")
         val PHYSICAL_MOUSE_SENSITIVITY = intPreferencesKey("physical_mouse_sensitivity")
+        val PHYSICAL_MOUSE_SCROLL_SENSITIVITY = intPreferencesKey("physical_mouse_scroll_sensitivity")
         // Audio
         val LEFT_VOICE_COIL_OUTPUT = intPreferencesKey("left_voice_coil_output")
         val RIGHT_VOICE_COIL_OUTPUT = intPreferencesKey("right_voice_coil_output")
@@ -282,6 +283,8 @@ class SettingsRepository @Inject constructor(
             inputControllerIndex = prefs[Keys.INPUT_CONTROLLER_INDEX] ?: 0,
             physicalMouseSensitivity = (prefs[Keys.PHYSICAL_MOUSE_SENSITIVITY] ?: 100)
                 .coerceIn(25, 300),
+            physicalMouseScrollSensitivity = (prefs[Keys.PHYSICAL_MOUSE_SCROLL_SENSITIVITY] ?: 100)
+                .coerceIn(25, 300),
             bgFillType = FillType.entries.getOrElse(prefs[Keys.BG_FILL_TYPE] ?: 0) { FillType.SOLID_COLOR },
             bgColor = prefs[Keys.BG_COLOR] ?: 0xFF000000.toInt(),
             bgImagePath = prefs[Keys.BG_IMAGE_PATH],
@@ -416,6 +419,8 @@ class SettingsRepository @Inject constructor(
             prefs[Keys.CONTROLLER_DRIVER] = settings.controllerDriver.ordinal
             prefs[Keys.INPUT_CONTROLLER_INDEX] = settings.inputControllerIndex
             prefs[Keys.PHYSICAL_MOUSE_SENSITIVITY] = settings.physicalMouseSensitivity.coerceIn(25, 300)
+            prefs[Keys.PHYSICAL_MOUSE_SCROLL_SENSITIVITY] =
+                settings.physicalMouseScrollSensitivity.coerceIn(25, 300)
             prefs[Keys.BG_FILL_TYPE] = settings.bgFillType.ordinal
             prefs[Keys.BG_COLOR] = settings.bgColor
             if (settings.bgImagePath != null) prefs[Keys.BG_IMAGE_PATH] = settings.bgImagePath else prefs.remove(Keys.BG_IMAGE_PATH)

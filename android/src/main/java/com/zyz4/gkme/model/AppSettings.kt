@@ -277,6 +277,8 @@ data class AppSettings(
     val inputControllerIndex: Int = 0,
     /** Right-stick speed multiplier for the physical-controller mouse mode, in percent. */
     val physicalMouseSensitivity: Int = 100,
+    /** LT/RT wheel speed multiplier for the physical-controller mouse mode, in percent. */
+    val physicalMouseScrollSensitivity: Int = 100,
     // ── Audio (DualSense Voice Coil + Speaker) ──
     val voiceCoilDevice: AudioDevice = AudioDevice.PHONE_MOTOR,
     /** Voice-coil target used while a physical controller is connected (defaults to it). */
