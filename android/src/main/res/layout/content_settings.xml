@@ -1798,7 +1798,7 @@
                         <Button
                             android:id="@+id/btnTargetUniversalKm"
                             style="@style/GamepadChip"
-                            android:text="Keyboard & mouse" />
+                            android:text="Keyboard &amp; mouse" />
                     </LinearLayout>
                 </LinearLayout>
 
