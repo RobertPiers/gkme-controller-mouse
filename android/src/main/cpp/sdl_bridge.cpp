@@ -63,11 +63,6 @@ constexpr int TOUCHPAD_MAX_X = 1919;
 constexpr int TOUCHPAD_MAX_Y = 942;
 constexpr int TRIGGER_DIGITAL_THRESHOLD = 16384;  // half of 0..32767
 
-// 8BitDo receivers expose a complete Android gamepad device. Opening their raw
-// HID interface is unnecessary for GKME's mappings and causes Android's USB
-// permission dialog to be shown again after the receiver is reattached.
-constexpr Uint16 EIGHTBITDO_VENDOR = 0x2DC8;
-
 struct Snapshot {
     int buttons = 0;
     int leftX = 0;

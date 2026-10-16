@@ -33,6 +33,10 @@ private const val TOUCHPAD_MAX_Y = 942
 private const val TOUCHPAD_MAX_XF = 1919f
 private const val TOUCHPAD_MAX_YF = 942f
 private const val EIGHTBITDO_VENDOR_ID = 0x2DC8
+// The Ultimate receiver briefly enumerates as a Switch Pro USB device while it
+// changes into its 8BitDo HID identity (057e:2009 -> 2dc8:3106).
+private const val EIGHTBITDO_TRANSITION_VENDOR_ID = 0x057E
+private const val EIGHTBITDO_TRANSITION_PRODUCT_ID = 0x2009
 
 data class PhysicalControllerState(
     val buttons: UInt = 0u,
@@ -260,7 +264,11 @@ class SdlPhysicalControllerBackend(private val context: Context) : PhysicalContr
         } catch (_: Exception) {
             emptyList()
         }
-        val hasEightBitDo = devices.any { it.vendorId == EIGHTBITDO_VENDOR_ID }
+        val hasEightBitDo = devices.any {
+            it.vendorId == EIGHTBITDO_VENDOR_ID ||
+                (it.vendorId == EIGHTBITDO_TRANSITION_VENDOR_ID &&
+                    it.productId == EIGHTBITDO_TRANSITION_PRODUCT_ID)
+        }
         SdlNative.nativeSetHidApiEnabled(!hasEightBitDo)
         // Do not delay an 8BitDo Android gamepad while waiting for HIDAPI to
         // claim it. It deliberately stays on Android's already-authorized path.
