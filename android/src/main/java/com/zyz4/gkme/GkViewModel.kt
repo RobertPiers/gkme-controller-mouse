@@ -138,6 +138,7 @@ class GkViewModel @Inject constructor(
         physicalMouseAccumX = 0f
         physicalMouseAccumY = 0f
         physicalMouseWheelAccum = 0f
+        physicalMouseWheelVelocity = 0f
         if (!enabled) {
             // Always release a button that may have been held while leaving mouse mode.
             _gamepadState.value = _gamepadState.value.copy(
@@ -211,6 +212,7 @@ class GkViewModel @Inject constructor(
     @Volatile
     private var physicalMouseTriggerRight = 0
     private var physicalMouseWheelAccum = 0f
+    private var physicalMouseWheelVelocity = 0f
 
     @Volatile
     private var physicalMouseModeEnabled = false
@@ -1019,6 +1021,7 @@ class GkViewModel @Inject constructor(
             physicalMouseAccumX = 0f
             physicalMouseAccumY = 0f
             physicalMouseWheelAccum = 0f
+            physicalMouseWheelVelocity = 0f
             return
         }
 
@@ -1048,7 +1051,11 @@ class GkViewModel @Inject constructor(
         // In mouse mode RT scrolls up and LT scrolls down. The analog level controls
         // the rate, while the fractional accumulator keeps light trigger pressure smooth.
         val triggerDelta = (physicalMouseTriggerRight - physicalMouseTriggerLeft) / 255f
-        physicalMouseWheelAccum += triggerDelta * PHYSICAL_MOUSE_SCROLL_UNITS_PER_SECOND * dtSec
+        val targetWheelVelocity = triggerDelta * PHYSICAL_MOUSE_SCROLL_UNITS_PER_SECOND
+        val smoothing = (dtSec * PHYSICAL_MOUSE_SCROLL_RESPONSE).coerceIn(0f, 1f)
+        physicalMouseWheelVelocity +=
+            (targetWheelVelocity - physicalMouseWheelVelocity) * smoothing
+        physicalMouseWheelAccum += physicalMouseWheelVelocity * dtSec
         val wheel = physicalMouseWheelAccum.toInt()
         physicalMouseWheelAccum -= wheel
         if (wheel != 0) {
@@ -1826,6 +1833,9 @@ private const val PHYSICAL_TRIGGER_MAP_THRESHOLD = 128
 
 /** Full trigger pressure scrolls at six 120-unit wheel detents per second. */
 private const val PHYSICAL_MOUSE_SCROLL_UNITS_PER_SECOND = 720f
+
+/** Response rate for smooth trigger pressure changes and release settling. */
+private const val PHYSICAL_MOUSE_SCROLL_RESPONSE = 24f
 
 /** Short-axis magnitude that maps to full deflection for physical stick shaping. */
 private const val PHYSICAL_STICK_FULL_SCALE = 32767f
